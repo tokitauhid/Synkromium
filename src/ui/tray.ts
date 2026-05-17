@@ -20,6 +20,8 @@
  */
 
 import { Tray, Menu, nativeImage, app } from "electron";
+import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 import type { SyncStatus } from "../sync/engine.js";
 
@@ -36,13 +38,46 @@ export class TrayManager {
   private onQuit: (() => void) | null = null;
 
   /**
+   * Resolves the path to the app icon.
+   * In production (packaged by electron-builder), assets are in process.resourcesPath/assets/.
+   * In development, they're in the project root's assets/ directory.
+   */
+  private getIconPath(): string {
+    const iconName = "Synkromium logo 1024x1024.png";
+
+    // Packaged app: electron-builder copies extraResources to process.resourcesPath
+    const prodPath = join(process.resourcesPath, "assets", iconName);
+    if (existsSync(prodPath)) return prodPath;
+
+    // Development: assets/ is in the project root (one level up from dist/)
+    const devPath = join(app.getAppPath(), "..", "assets", iconName);
+    if (existsSync(devPath)) return devPath;
+
+    // Fallback: look relative to app path directly
+    const fallbackPath = join(app.getAppPath(), "assets", iconName);
+    if (existsSync(fallbackPath)) return fallbackPath;
+
+    return ""; // Will fall through to createEmpty()
+  }
+
+  /**
    * Creates the system tray icon and its right-click menu.
    * Call this once during app startup.
    */
   create(): void {
-    // Create a simple tray icon. We use a 16x16 empty image
-    // as a placeholder — in production, you'd use a real icon file.
-    const icon = nativeImage.createEmpty();
+    // Load the real Synkromium logo and resize it for the system tray.
+    const iconPath = this.getIconPath();
+    let icon: Electron.NativeImage;
+
+    if (iconPath) {
+      icon = nativeImage.createFromPath(iconPath);
+      // Resize to 16x16 for proper tray icon display (most platforms).
+      icon = icon.resize({ width: 16, height: 16 });
+    } else {
+      console.warn("[Synkromium] Could not find tray icon, using empty placeholder.");
+      icon = nativeImage.createEmpty();
+    }
+
     this.tray = new Tray(icon);
 
     this.tray.setToolTip("Synkromium — Your browser, everywhere.");

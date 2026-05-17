@@ -4,15 +4,24 @@
   "description": "Keep your Chromium browser settings and extensions in sync across all your devices, privately and automatically.",
   "type": "module",
   "main": "dist/main.js",
+  "homepage": "https://github.com/tokitauhid/Synkromium",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tokitauhid/Synkromium.git"
+  },
   "scripts": {
     "build:main": "tsc",
     "build:renderer": "tsc -p src/ui/renderer/tsconfig.json",
     "copy:assets": "mkdir -p dist/ui/renderer && cp src/ui/renderer/index.html dist/ui/renderer/ && cp src/ui/renderer/styles.css dist/ui/renderer/",
     "build": "npm run build:main && npm run build:renderer && npm run copy:assets",
     "dev": "npm run build && electron dist/main.js",
-    "start": "electron dist/main.js"
+    "start": "electron dist/main.js",
+    "dist": "npm run build && electron-builder",
+    "dist:linux": "npm run build && electron-builder --linux",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win"
   },
-  "author": "",
+  "author": "Tokit Auhid <tokitauhidmim12@gmail.com>",
   "license": "MIT",
   "keywords": [
     "chromium",
@@ -22,9 +31,68 @@
     "extensions",
     "git"
   ],
+  "build": {
+    "appId": "com.synkromium.app",
+    "productName": "Synkromium",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "assets/",
+        "to": "assets/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm"
+      ],
+      "icon": "build/icons/icon.png",
+      "category": "Utility",
+      "synopsis": "Private, Git-backed Chromium browser sync"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icons/icon.png",
+      "darkModeSupport": true,
+      "category": "public.app-category.utilities"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icons/icon.ico",
+      "uninstallerIcon": "build/icons/icon.ico"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "tokitauhid",
+      "repo": "Synkromium"
+    }
+  },
   "devDependencies": {
     "@types/node": "^25.8.0",
     "electron": "^42.1.0",
+    "electron-builder": "^26.8.1",
     "typescript": "^6.0.3"
   },
   "dependencies": {

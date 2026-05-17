@@ -21,5 +21,8 @@ Thumbs.db
 # Lock files from the sync engine (runtime only, never committed).
 .sync.lock
 
+# Packaged binaries — built by electron-builder, never committed.
+release/
+
 implementation_plan.md
 plan.md
