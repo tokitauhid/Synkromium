@@ -1,3 +1,4 @@
+ALWAYS HUMANIZE THE CODE AND COMMENTS
 # Git-Backed Cross-Device Sync Extension
 ## Project Plan v3
 
