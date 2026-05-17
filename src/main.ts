@@ -12,7 +12,10 @@
  */
 
 import { app, BrowserWindow } from "electron";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { TrayManager } from "./ui/tray.js";
