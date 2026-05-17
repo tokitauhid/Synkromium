@@ -3,21 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Synkromium</title>
+  <title>Synkromium Settings</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!--
-    This is the settings and status window for Synkromium.
-    It shows sync status, handles first-run setup,
-    and displays conflict resolution UI when needed.
-
-    Implementation comes in Step 12.
-  -->
   <div id="app">
-    <h1>Synkromium</h1>
-    <p>Your browser, everywhere.</p>
+    <!-- Header -->
+    <header class="app-header">
+      <h1>Synkromium</h1>
+      <p class="tagline">Your browser, everywhere.</p>
+    </header>
+
+    <!-- Status Section -->
+    <section class="status-section">
+      <h2>Sync Status</h2>
+      <div class="status-card">
+        <span id="status-indicator" class="status-dot idle"></span>
+        <span id="status-text">Checking...</span>
+      </div>
+      <p id="last-sync" class="last-sync">Last synced: Never</p>
+    </section>
+
+    <!-- Device Info -->
+    <section class="device-section">
+      <h2>This Device</h2>
+      <div class="info-row">
+        <span class="label">Name:</span>
+        <span id="device-name" class="value">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">ID:</span>
+        <span id="device-id" class="value">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Platform:</span>
+        <span id="device-platform" class="value">—</span>
+      </div>
+    </section>
+
+    <!-- Browser Detection -->
+    <section class="browser-section">
+      <h2>Detected Browsers</h2>
+      <ul id="browser-list" class="browser-list">
+        <li>Scanning...</li>
+      </ul>
+    </section>
+
+    <!-- Actions -->
+    <section class="actions-section">
+      <button id="btn-sync-now" class="btn btn-primary">Sync Now</button>
+      <button id="btn-view-log" class="btn btn-secondary">View Sync Log</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Synkromium v0.1.0 — Your data stays yours.</p>
+    </footer>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>
