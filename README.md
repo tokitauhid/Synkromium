@@ -187,6 +187,7 @@ Startup / Poll / Manual Trigger
 | Browser | Linux | macOS | Windows |
 |---------|:-----:|:-----:|:-------:|
 | **Google Chrome** | ✅ | ✅ | ✅ |
+| **Helium** | ✅ | ✅ | ✅ |
 | **Chromium** | ✅ | ✅ | ✅ |
 | **Brave** | ✅ | ✅ | ✅ |
 | **Microsoft Edge** | ✅ | ✅ | ✅ |
