@@ -20,3 +20,6 @@ Thumbs.db
 
 # Lock files from the sync engine (runtime only, never committed).
 .sync.lock
+
+implementation_plan.md
+plan.md
