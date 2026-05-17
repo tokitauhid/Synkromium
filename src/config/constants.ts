@@ -15,7 +15,7 @@
 export const APP_NAME = "Synkromium";
 
 /** Current version of the app. Bump this when we ship updates. */
-export const APP_VERSION = "0.1.0";
+export const APP_VERSION = "0.1.2";
 
 // ─── Git Repository ─────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 {
   "name": "synkromium",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Keep your Chromium browser settings and extensions in sync across all your devices, privately and automatically.",
   "type": "module",
   "main": "dist/main.js",
