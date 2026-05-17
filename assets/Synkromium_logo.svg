@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="neonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2A85" />
+      <stop offset="50%" stop-color="#B224EF" />
+      <stop offset="100%" stop-color="#00E5FF" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="400" height="400" fill="#0D0E15" rx="60" />
+
+  <g transform="translate(0, -5)">
+    <circle cx="200" cy="205" r="115" 
+            stroke="url(#neonGrad)" stroke-width="16" fill="none" 
+            stroke-dasharray="85 35.4" transform="rotate(15 200 205)" 
+            stroke-linecap="round" />
+
+    <path d="M 230 145 
+             L 185 145 
+             A 30 30 0 0 0 185 205 
+             L 215 205 
+             A 30 30 0 0 1 215 265 
+             L 170 265" 
+          stroke="url(#neonGrad)" stroke-width="22" fill="none" 
+          stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>

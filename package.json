@@ -20,7 +20,8 @@
     "dist:linux": "npm run build && electron-builder --linux",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
-    "install:linux": "bash install.sh"
+    "install:linux": "bash install.sh",
+    "version": "node scripts/update-version.js && git add README.md src/ui/renderer/index.html src/config/constants.ts"
   },
   "author": "Tokit Auhid <tokitauhidmim12@gmail.com>",
   "license": "MIT",

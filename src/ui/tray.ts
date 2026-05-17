@@ -43,7 +43,7 @@ export class TrayManager {
    * In development, they're in the project root's assets/ directory.
    */
   private getIconPath(): string {
-    const iconName = "Synkromium logo 1024x1024.png";
+    const iconName = "Synkromium_logo.svg";
 
     // Packaged app: electron-builder copies extraResources to process.resourcesPath
     const prodPath = join(process.resourcesPath, "assets", iconName);

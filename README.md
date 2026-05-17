@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="assets/Synkromium_logo.svg" alt="Synkromium Logo" width="128" />
   <h1 align="center">Synkromium</h1>
   <p align="center">
     <strong>Your browser, everywhere.</strong>
