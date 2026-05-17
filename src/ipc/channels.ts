@@ -46,3 +46,6 @@ export const GET_DEVICE_INFO = "device:get-info";
 
 /** Renderer → Main: "Which browsers are installed?" */
 export const GET_BROWSERS = "browser:get-installed";
+
+/** Renderer → Main: "Is this custom browser path valid?" */
+export const VALIDATE_BROWSER_PATH = "browser:validate-path";

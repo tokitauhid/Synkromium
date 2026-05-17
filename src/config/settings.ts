@@ -33,8 +33,8 @@ export interface UserSettings {
   /** The name of the private repo to store synced data in. */
   repoName: string;
 
-  /** Which Chromium browser to sync: "chrome", "brave", "edge", or "chromium". */
-  browser: "chrome" | "chromium" | "brave" | "edge";
+  /** Which Chromium browser to sync: "chrome", "brave", "edge", "chromium", or "helium". */
+  browser: "chrome" | "chromium" | "brave" | "edge" | "helium";
 
   /** Which Chrome profile to sync (most people use "Default"). */
   profileName: string;
@@ -57,6 +57,13 @@ export interface UserSettings {
 
   /** Has the user completed the first-run setup? */
   setupComplete: boolean;
+
+  /**
+   * Optional custom path to the browser's data directory.
+   * When set, this overrides the auto-detected path.
+   * Useful for portable installs or non-standard locations.
+   */
+  customBrowserPath: string;
 }
 
 // ─── Defaults ───────────────────────────────────────────────────
@@ -81,6 +88,7 @@ function getDefaultSettings(): UserSettings {
     autoSync: true,
     syncOnStartup: true,
     setupComplete: false,
+    customBrowserPath: "",
   };
 }
 

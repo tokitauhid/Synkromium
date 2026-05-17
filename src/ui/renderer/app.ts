@@ -75,6 +75,9 @@ const saveSyncBtn = document.getElementById('btn-save-sync');
 // Browser
 const browserOptionsEl = document.getElementById('browser-options');
 const profileNameInput = document.getElementById('profile-name') as HTMLInputElement;
+const customBrowserPathInput = document.getElementById('custom-browser-path') as HTMLInputElement;
+const validatePathBtn = document.getElementById('btn-validate-path');
+const pathValidationResult = document.getElementById('path-validation-result');
 const saveBrowserBtn = document.getElementById('btn-save-browser');
 
 // ─── State ──────────────────────────────────────────────────────
@@ -198,6 +201,7 @@ function renderBrowserOptions(): void {
     { id: 'chromium', name: 'Chromium', icon: '◉' },
     { id: 'brave', name: 'Brave', icon: '🦁' },
     { id: 'edge', name: 'Microsoft Edge', icon: '🔵' },
+    { id: 'helium', name: 'Helium', icon: '☀' },
   ];
 
   browserOptionsEl.innerHTML = '';
@@ -225,13 +229,42 @@ function renderBrowserOptions(): void {
   }
 }
 
+// Validate custom browser path
+validatePathBtn?.addEventListener('click', async () => {
+  if (!pathValidationResult) return;
+
+  const customPath = customBrowserPathInput?.value || '';
+  if (!customPath.trim()) {
+    showBanner(pathValidationResult, 'Enter a path to validate.', false);
+    return;
+  }
+
+  validatePathBtn.classList.add('loading');
+  validatePathBtn.setAttribute('disabled', 'true');
+  pathValidationResult.classList.add('hidden');
+
+  try {
+    const profileName = profileNameInput?.value || 'Default';
+    const result = await window.synkromium.validateBrowserPath(customPath, profileName);
+    pathValidationResult.textContent = result.message;
+    pathValidationResult.className = `result-banner ${result.valid ? 'success' : 'error'}`;
+  } catch {
+    pathValidationResult.textContent = 'Validation failed unexpectedly.';
+    pathValidationResult.className = 'result-banner error';
+  }
+
+  validatePathBtn.classList.remove('loading');
+  validatePathBtn.removeAttribute('disabled');
+});
+
 saveBrowserBtn?.addEventListener('click', async () => {
   await window.synkromium.saveSettings({
     browser: selectedBrowser,
     profileName: profileNameInput?.value || 'Default',
+    customBrowserPath: customBrowserPathInput?.value || '',
   });
 
-  showBanner(null, 'Browser choice saved!', true);
+  showBanner(pathValidationResult, 'Browser choice saved!', true);
 });
 
 // ─── Sync Now Button ────────────────────────────────────────────
@@ -299,6 +332,7 @@ async function initialize(): Promise<void> {
     // Populate browser selection.
     selectedBrowser = (settings.browser as string) || 'chrome';
     if (profileNameInput) profileNameInput.value = (settings.profileName as string) || 'Default';
+    if (customBrowserPathInput) customBrowserPathInput.value = (settings.customBrowserPath as string) || '';
 
     // Load device info.
     const device = await window.synkromium.getDeviceInfo();
@@ -315,6 +349,7 @@ async function initialize(): Promise<void> {
       const prettyNames: Record<string, string> = {
         chrome: 'Google Chrome', chromium: 'Chromium',
         brave: 'Brave', edge: 'Microsoft Edge',
+        helium: 'Helium',
       };
       if (installedBrowsers.length === 0) {
         browserListEl.innerHTML = '<li class="chip">No browsers detected</li>';

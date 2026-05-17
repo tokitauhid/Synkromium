@@ -233,7 +233,7 @@
       <!-- ─── Browser Selection Page ─── -->
       <section class="page" id="page-browser">
         <h2 class="page-title">Browser</h2>
-        <p class="page-desc">Choose which Chromium browser to sync.</p>
+        <p class="page-desc">Choose which Chromium browser to sync. If your browser isn't listed or is installed in a non-standard location, you can set a custom path below.</p>
 
         <div class="glass-card form-card">
           <div class="browser-options" id="browser-options">
@@ -246,11 +246,28 @@
             <p class="field-hint">Most people use "Default". Check chrome://version to see your profile name.</p>
           </div>
 
+          <div class="divider"></div>
+
+          <h3 class="card-section-title">Custom Installation Path</h3>
+          <p class="custom-path-desc">If your browser is installed in a non-standard location, paste the full path to its data directory here. This overrides the auto-detected path.</p>
+
+          <div class="form-group">
+            <label for="custom-browser-path">Browser Data Directory</label>
+            <input type="text" id="custom-browser-path" placeholder="e.g., /home/user/.config/my-browser" autocomplete="off" spellcheck="false">
+            <p class="field-hint">Leave empty to use the default auto-detected path. The path should point to the folder containing your browser profiles (e.g., "Default").</p>
+          </div>
+
           <div class="form-actions">
+            <button id="btn-validate-path" class="btn btn-outline">
+              <span class="btn-icon">🔍</span> Validate Path
+            </button>
             <button id="btn-save-browser" class="btn btn-primary">
               <span class="btn-icon">✓</span> Save Browser Choice
             </button>
           </div>
+
+          <!-- Path validation result -->
+          <div id="path-validation-result" class="result-banner hidden"></div>
         </div>
       </section>
 

@@ -49,6 +49,9 @@ contextBridge.exposeInMainWorld("synkromium", {
   getInstalledBrowsers: () =>
     ipcRenderer.invoke(channels.GET_BROWSERS),
 
+  validateBrowserPath: (customPath: string, profileName?: string) =>
+    ipcRenderer.invoke(channels.VALIDATE_BROWSER_PATH, customPath, profileName),
+
   // ── Status Updates (Main → Renderer) ──
   onSyncStatusChanged: (callback: (status: string, message: string) => void) => {
     ipcRenderer.on(channels.SYNC_STATUS_CHANGED, (_event, status, message) => {

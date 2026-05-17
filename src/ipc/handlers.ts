@@ -12,7 +12,7 @@
 import { ipcMain } from "electron";
 import { loadSettings, saveSettings, getRepoUrl, isConfigured, type UserSettings } from "../config/settings.js";
 import { getOrCreateDeviceIdentity } from "../device/identity.js";
-import { detectInstalledBrowsers } from "../adapters/chromium/paths.js";
+import { detectInstalledBrowsers, validateCustomBrowserPath } from "../adapters/chromium/paths.js";
 import * as git from "../git/backend.js";
 import * as channels from "./channels.js";
 
@@ -143,5 +143,15 @@ export function registerIpcHandlers(): void {
    */
   ipcMain.handle(channels.GET_BROWSERS, () => {
     return detectInstalledBrowsers();
+  });
+
+  // ── Browser Path Validation ──
+
+  /**
+   * Validates a custom browser data path.
+   * Returns whether the path looks like a valid Chromium data directory.
+   */
+  ipcMain.handle(channels.VALIDATE_BROWSER_PATH, (_event, customPath: string, profileName?: string) => {
+    return validateCustomBrowserPath(customPath, profileName || "Default");
   });
 }

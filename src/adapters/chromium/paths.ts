@@ -10,8 +10,11 @@
  * This module figures out the right path for the current computer
  * so the rest of the code doesn't have to worry about it.
  *
- * It also supports Brave, Edge, and Chromium — they all use the
- * same settings format, just in different directories.
+ * It also supports Brave, Edge, Chromium, and Helium — they all
+ * use the same settings format, just in different directories.
+ *
+ * Users can also manually specify a custom browser data path
+ * for browsers installed in non-standard locations.
  */
 
 import { join } from "node:path";
@@ -24,7 +27,7 @@ import { platform, homedir } from "node:os";
  * Every Chromium-based browser we know how to find.
  * The key is a friendly name, the value has paths for each OS.
  */
-export type BrowserName = "chrome" | "chromium" | "brave" | "edge";
+export type BrowserName = "chrome" | "chromium" | "brave" | "edge" | "helium";
 
 interface BrowserPaths {
   linux: string;
@@ -58,6 +61,11 @@ const BROWSER_DATA_PATHS: Record<BrowserName, BrowserPaths> = {
     darwin: "Library/Application Support/Microsoft Edge",
     win32: "Microsoft/Edge/User Data",
   },
+  helium: {
+    linux: ".config/net.imput.helium",
+    darwin: "Library/Application Support/net.imput.helium",
+    win32: "imput/Helium",
+  },
 };
 
 /**
@@ -78,8 +86,17 @@ const SETTINGS_FILES = [
  * On Linux, this is something like: /home/tokit/.config/google-chrome
  * On macOS: /Users/tokit/Library/Application Support/Google/Chrome
  * On Windows: C:\Users\tokit\AppData\Local\Google\Chrome\User Data
+ *
+ * If a customPath is provided, it is used directly instead of
+ * looking up the default path. This lets users point to browsers
+ * installed in non-standard locations.
  */
-export function getBrowserDataPath(browser: BrowserName): string | null {
+export function getBrowserDataPath(browser: BrowserName, customPath?: string): string | null {
+  // If the user has set a custom path, use it directly.
+  if (customPath && customPath.trim() !== "") {
+    return customPath.trim();
+  }
+
   const currentPlatform = platform();
   const home = homedir();
   const paths = BROWSER_DATA_PATHS[browser];
@@ -109,8 +126,8 @@ export function getBrowserDataPath(browser: BrowserName): string | null {
  * "Default" profile (even if they don't know it). Multi-profile
  * support can come later.
  */
-export function getProfilePath(browser: BrowserName, profileName: string = "Default"): string | null {
-  const dataPath = getBrowserDataPath(browser);
+export function getProfilePath(browser: BrowserName, profileName: string = "Default", customPath?: string): string | null {
+  const dataPath = getBrowserDataPath(browser, customPath);
 
   if (!dataPath) {
     return null;
@@ -130,8 +147,8 @@ export function getProfilePath(browser: BrowserName, profileName: string = "Defa
  *   → ["/home/tokit/.config/google-chrome/Default/Preferences",
  *      "/home/tokit/.config/google-chrome/Default/Bookmarks"]
  */
-export function getSettingsFilePaths(browser: BrowserName, profileName: string = "Default"): string[] {
-  const profilePath = getProfilePath(browser, profileName);
+export function getSettingsFilePaths(browser: BrowserName, profileName: string = "Default", customPath?: string): string[] {
+  const profilePath = getProfilePath(browser, profileName, customPath);
 
   if (!profilePath) {
     return [];
@@ -155,7 +172,7 @@ export function getSettingsFilePaths(browser: BrowserName, profileName: string =
  */
 export function detectInstalledBrowsers(): BrowserName[] {
   const installed: BrowserName[] = [];
-  const allBrowsers: BrowserName[] = ["chrome", "chromium", "brave", "edge"];
+  const allBrowsers: BrowserName[] = ["chrome", "chromium", "brave", "edge", "helium"];
 
   for (const browser of allBrowsers) {
     const dataPath = getBrowserDataPath(browser);
@@ -165,6 +182,50 @@ export function detectInstalledBrowsers(): BrowserName[] {
   }
 
   return installed;
+}
+
+/**
+ * Validates that a custom browser data path looks correct.
+ * Checks that the directory exists and contains a profile
+ * subdirectory with recognizable Chromium settings files.
+ *
+ * Returns a result with a helpful message either way.
+ */
+export function validateCustomBrowserPath(
+  customPath: string,
+  profileName: string = "Default"
+): { valid: boolean; message: string } {
+  if (!customPath || customPath.trim() === "") {
+    return { valid: false, message: "No path provided." };
+  }
+
+  const trimmed = customPath.trim();
+
+  if (!existsSync(trimmed)) {
+    return { valid: false, message: `Directory not found: ${trimmed}` };
+  }
+
+  const profilePath = join(trimmed, profileName);
+  if (!existsSync(profilePath)) {
+    return {
+      valid: false,
+      message: `Profile "${profileName}" not found in ${trimmed}. Available profiles may have different names.`,
+    };
+  }
+
+  // Check for at least one recognizable Chromium settings file.
+  const hasSettingsFile = SETTINGS_FILES.some((f) =>
+    existsSync(join(profilePath, f))
+  );
+
+  if (!hasSettingsFile) {
+    return {
+      valid: false,
+      message: `No Chromium settings files found in ${profilePath}. This may not be a Chromium-based browser data directory.`,
+    };
+  }
+
+  return { valid: true, message: "Path looks correct — Chromium settings files found." };
 }
 
 /**

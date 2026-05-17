@@ -46,16 +46,25 @@ const MACHINE_SPECIFIC_KEYS = [
 export class ChromiumAdapter implements Adapter {
   private browser: BrowserName;
   private profileName: string;
+  private customBrowserPath: string;
 
   /**
    * Creates a new Chromium adapter for a specific browser and profile.
    *
    * Defaults to Google Chrome's "Default" profile, which is what
    * most people use without even knowing it.
+   *
+   * If customBrowserPath is set, it overrides the auto-detected
+   * browser data directory.
    */
-  constructor(browser: BrowserName = "chrome", profileName: string = "Default") {
+  constructor(
+    browser: BrowserName = "chrome",
+    profileName: string = "Default",
+    customBrowserPath: string = ""
+  ) {
     this.browser = browser;
     this.profileName = profileName;
+    this.customBrowserPath = customBrowserPath;
   }
 
   // ── extract() — Read settings from the browser ──
@@ -72,7 +81,7 @@ export class ChromiumAdapter implements Adapter {
    * 5. Bundles everything into a NormalizedState
    */
   async extract(): Promise<NormalizedState> {
-    const settingsFiles = getSettingsFilePaths(this.browser, this.profileName);
+    const settingsFiles = getSettingsFilePaths(this.browser, this.profileName, this.customBrowserPath || undefined);
     const settingsData: Record<string, unknown> = {};
 
     // Read each settings file and clean it up.
@@ -92,7 +101,7 @@ export class ChromiumAdapter implements Adapter {
     }
 
     // Grab the extension list separately.
-    const profilePath = getProfilePath(this.browser, this.profileName);
+    const profilePath = getProfilePath(this.browser, this.profileName, this.customBrowserPath || undefined);
     if (profilePath) {
       const extensions = extractExtensions(profilePath);
       settingsData["extensions"] = extensions;
@@ -124,7 +133,7 @@ export class ChromiumAdapter implements Adapter {
    * If Chrome is open, it might overwrite our changes when it exits.
    */
   async restore(state: NormalizedState): Promise<void> {
-    const profilePath = getProfilePath(this.browser, this.profileName);
+    const profilePath = getProfilePath(this.browser, this.profileName, this.customBrowserPath || undefined);
 
     if (!profilePath) {
       throw new Error(
@@ -211,7 +220,7 @@ export class ChromiumAdapter implements Adapter {
   // ── Metadata ──
 
   getSyncPaths(): string[] {
-    return getSettingsFilePaths(this.browser, this.profileName);
+    return getSettingsFilePaths(this.browser, this.profileName, this.customBrowserPath || undefined);
   }
 
   getId(): string {

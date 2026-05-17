@@ -744,7 +744,7 @@ body {
 
 .browser-options {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -784,6 +784,13 @@ body {
 
 .browser-option .browser-status.installed {
   color: var(--accent-green);
+}
+
+.custom-path-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.6;
 }
 
 /* ══════════════════════════════════════════════════════════════
