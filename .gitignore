@@ -1,28 +1,14 @@
-# Compiled output — we rebuild this from source every time.
 dist/
-
-# Dependencies — each developer installs their own from package.json.
 node_modules/
-
-# OS junk files that sneak in.
 .DS_Store
 Thumbs.db
-
-# Editor-specific files — everyone has their own setup.
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Environment files that might contain secrets.
 .env
 .env.local
-
-# Lock files from the sync engine (runtime only, never committed).
 .sync.lock
-
-# Packaged binaries — built by electron-builder, never committed.
 release/
-
 implementation_plan.md
 plan.md

@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
-    // The renderer runs in a browser context inside Electron,
-    // so it needs DOM types (document, window, etc.) instead of Node types.
     "target": "ES2022",
     "module": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-
     "outDir": "../../../dist/ui/renderer",
     "rootDir": ".",
     "strict": true,

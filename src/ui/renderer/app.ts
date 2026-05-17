@@ -1,21 +1,5 @@
-/**
- * app.ts — The renderer-side logic for the Synkromium settings window.
- *
- * This runs inside the Electron browser window (sandboxed).
- * It communicates with the main process ONLY through the
- * window.synkromium bridge (defined in preload.ts).
- *
- * Responsibilities:
- * - Page navigation (sidebar clicks)
- * - Loading and displaying settings from the main process
- * - Saving user changes back to the main process
- * - Showing connection test results
- * - Updating sync status in real-time
- */
-
-// Type declarations for window.synkromium are in global.d.ts.
-
-// ─── Page Navigation ────────────────────────────────────────────
+// Renderer-side logic for the Synkromium settings window.
+// Communicates with main process only through window.synkromium (see preload.ts).
 
 const navItems = document.querySelectorAll<HTMLElement>('.nav-item');
 const pages = document.querySelectorAll<HTMLElement>('.page');
@@ -25,24 +9,16 @@ navItems.forEach(item => {
     const targetPage = item.getAttribute('data-page');
     if (!targetPage) return;
 
-    // Update sidebar active state.
     navItems.forEach(nav => nav.classList.remove('active'));
     item.classList.add('active');
 
-    // Show the target page, hide the rest.
     pages.forEach(page => {
-      if (page.id === `page-${targetPage}`) {
-        page.classList.add('active');
-      } else {
-        page.classList.remove('active');
-      }
+      page.classList.toggle('active', page.id === `page-${targetPage}`);
     });
   });
 });
 
-// ─── DOM Element References ─────────────────────────────────────
-
-// Dashboard
+// DOM references
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
 const lastSyncEl = document.getElementById('last-sync');
@@ -54,7 +30,6 @@ const syncNowBtn = document.getElementById('btn-sync-now');
 const sidebarStatusDot = document.getElementById('sidebar-status-dot');
 const sidebarStatusText = document.getElementById('sidebar-status-text');
 
-// GitHub Setup
 const githubUsernameInput = document.getElementById('github-username') as HTMLInputElement;
 const githubTokenInput = document.getElementById('github-token') as HTMLInputElement;
 const repoNameInput = document.getElementById('repo-name') as HTMLInputElement;
@@ -63,7 +38,6 @@ const testConnectionBtn = document.getElementById('btn-test-connection');
 const saveGithubBtn = document.getElementById('btn-save-github');
 const connectionResult = document.getElementById('connection-result');
 
-// Sync Settings
 const syncSettingsCheck = document.getElementById('sync-settings') as HTMLInputElement;
 const syncExtensionsCheck = document.getElementById('sync-extensions') as HTMLInputElement;
 const syncBookmarksCheck = document.getElementById('sync-bookmarks') as HTMLInputElement;
@@ -72,7 +46,6 @@ const syncOnStartupCheck = document.getElementById('sync-on-startup') as HTMLInp
 const pollIntervalInput = document.getElementById('poll-interval') as HTMLInputElement;
 const saveSyncBtn = document.getElementById('btn-save-sync');
 
-// Browser
 const browserOptionsEl = document.getElementById('browser-options');
 const profileNameInput = document.getElementById('profile-name') as HTMLInputElement;
 const customBrowserPathInput = document.getElementById('custom-browser-path') as HTMLInputElement;
@@ -80,23 +53,17 @@ const validatePathBtn = document.getElementById('btn-validate-path');
 const pathValidationResult = document.getElementById('path-validation-result');
 const saveBrowserBtn = document.getElementById('btn-save-browser');
 
-// ─── State ──────────────────────────────────────────────────────
-
 let currentSettings: Record<string, unknown> = {};
 let selectedBrowser = 'chrome';
 let installedBrowsers: string[] = [];
 
-// ─── Status Updates ─────────────────────────────────────────────
-
 function updateSyncStatus(status: string, message: string): void {
-  // Update main status display.
   if (statusDot) {
     statusDot.className = 'status-dot-lg';
     statusDot.classList.add(status);
   }
   if (statusText) statusText.textContent = message;
 
-  // Update sidebar mini status.
   if (sidebarStatusDot) {
     sidebarStatusDot.className = 'status-dot';
     sidebarStatusDot.classList.add(status);
@@ -106,15 +73,10 @@ function updateSyncStatus(status: string, message: string): void {
 
 function updateLastSync(timestamp: string): void {
   if (!lastSyncEl) return;
-  if (timestamp) {
-    const date = new Date(timestamp);
-    lastSyncEl.textContent = `Last synced: ${date.toLocaleString()}`;
-  } else {
-    lastSyncEl.textContent = 'Last synced: Never';
-  }
+  lastSyncEl.textContent = timestamp
+    ? `Last synced: ${new Date(timestamp).toLocaleString()}`
+    : 'Last synced: Never';
 }
-
-// ─── Token Visibility Toggle ────────────────────────────────────
 
 toggleTokenBtn?.addEventListener('click', () => {
   if (githubTokenInput.type === 'password') {
@@ -126,9 +88,6 @@ toggleTokenBtn?.addEventListener('click', () => {
   }
 });
 
-// ─── GitHub Setup Actions ───────────────────────────────────────
-
-// Test Connection
 testConnectionBtn?.addEventListener('click', async () => {
   if (!connectionResult) return;
 
@@ -136,7 +95,6 @@ testConnectionBtn?.addEventListener('click', async () => {
   testConnectionBtn.setAttribute('disabled', 'true');
   connectionResult.classList.add('hidden');
 
-  // Save current values first so the test uses them.
   await saveGithubSettings();
 
   try {
@@ -152,7 +110,6 @@ testConnectionBtn?.addEventListener('click', async () => {
   testConnectionBtn.removeAttribute('disabled');
 });
 
-// Save GitHub settings
 saveGithubBtn?.addEventListener('click', async () => {
   await saveGithubSettings();
   showBanner(connectionResult, 'Settings saved!', true);
@@ -164,8 +121,7 @@ async function saveGithubSettings(): Promise<void> {
     repoName: repoNameInput?.value || '',
   };
 
-  // Only update the token if the user typed a new one.
-  // (If they didn't touch it, the masked value would be there.)
+  // Only update token if user typed a new one (not the masked placeholder)
   const tokenValue = githubTokenInput?.value || '';
   if (tokenValue && !tokenValue.startsWith('•')) {
     settings.githubToken = tokenValue;
@@ -173,8 +129,6 @@ async function saveGithubSettings(): Promise<void> {
 
   await window.synkromium.saveSettings(settings);
 }
-
-// ─── Sync Settings Actions ──────────────────────────────────────
 
 saveSyncBtn?.addEventListener('click', async () => {
   await window.synkromium.saveSettings({
@@ -190,8 +144,6 @@ saveSyncBtn?.addEventListener('click', async () => {
 
   showBanner(null, 'Sync settings saved!', true);
 });
-
-// ─── Browser Selection ──────────────────────────────────────────
 
 function renderBrowserOptions(): void {
   if (!browserOptionsEl) return;
@@ -222,14 +174,13 @@ function renderBrowserOptions(): void {
 
     card.addEventListener('click', () => {
       selectedBrowser = browser.id;
-      renderBrowserOptions(); // Re-render to update selection.
+      renderBrowserOptions();
     });
 
     browserOptionsEl.appendChild(card);
   }
 }
 
-// Validate custom browser path
 validatePathBtn?.addEventListener('click', async () => {
   if (!pathValidationResult) return;
 
@@ -267,8 +218,6 @@ saveBrowserBtn?.addEventListener('click', async () => {
   showBanner(pathValidationResult, 'Browser choice saved!', true);
 });
 
-// ─── Sync Now Button ────────────────────────────────────────────
-
 syncNowBtn?.addEventListener('click', async () => {
   syncNowBtn.setAttribute('disabled', 'true');
   syncNowBtn.classList.add('loading');
@@ -286,41 +235,25 @@ syncNowBtn?.addEventListener('click', async () => {
   syncNowBtn.classList.remove('loading');
 });
 
-// ─── Helper: Show a brief success/error banner ──────────────────
-
-function showBanner(
-  bannerEl: HTMLElement | null,
-  message: string,
-  success: boolean
-): void {
-  // If no specific banner element, use a temporary approach.
-  // For now, use the connection result banner if it's the GitHub page.
+function showBanner(bannerEl: HTMLElement | null, message: string, success: boolean): void {
   const target = bannerEl || connectionResult;
   if (!target) return;
 
   target.textContent = message;
   target.className = `result-banner ${success ? 'success' : 'error'}`;
 
-  // Auto-hide after 3 seconds.
-  setTimeout(() => {
-    target.classList.add('hidden');
-  }, 3000);
+  setTimeout(() => { target.classList.add('hidden'); }, 3000);
 }
-
-// ─── Initialize: Load everything from the main process ──────────
 
 async function initialize(): Promise<void> {
   try {
-    // Load settings.
     const settings = await window.synkromium.getSettings();
     currentSettings = settings;
 
-    // Populate GitHub fields.
     if (githubUsernameInput) githubUsernameInput.value = (settings.githubUsername as string) || '';
     if (githubTokenInput) githubTokenInput.value = (settings.githubTokenMasked as string) || '';
     if (repoNameInput) repoNameInput.value = (settings.repoName as string) || '';
 
-    // Populate sync settings.
     const syncOptions = settings.syncOptions as { settings: boolean; extensions: boolean; bookmarks: boolean } | undefined;
     if (syncSettingsCheck && syncOptions) syncSettingsCheck.checked = syncOptions.settings;
     if (syncExtensionsCheck && syncOptions) syncExtensionsCheck.checked = syncOptions.extensions;
@@ -329,21 +262,17 @@ async function initialize(): Promise<void> {
     if (syncOnStartupCheck) syncOnStartupCheck.checked = (settings.syncOnStartup as boolean) ?? true;
     if (pollIntervalInput) pollIntervalInput.value = String(settings.pollIntervalMinutes || 15);
 
-    // Populate browser selection.
     selectedBrowser = (settings.browser as string) || 'chrome';
     if (profileNameInput) profileNameInput.value = (settings.profileName as string) || 'Default';
     if (customBrowserPathInput) customBrowserPathInput.value = (settings.customBrowserPath as string) || '';
 
-    // Load device info.
     const device = await window.synkromium.getDeviceInfo();
     if (deviceNameEl) deviceNameEl.textContent = device.name;
     if (deviceIdEl) deviceIdEl.textContent = device.id;
     if (devicePlatformEl) devicePlatformEl.textContent = device.platform;
 
-    // Load installed browsers.
     installedBrowsers = await window.synkromium.getInstalledBrowsers();
 
-    // Render browser chips on dashboard.
     if (browserListEl) {
       browserListEl.innerHTML = '';
       const prettyNames: Record<string, string> = {
@@ -363,26 +292,21 @@ async function initialize(): Promise<void> {
       }
     }
 
-    // Render browser selection cards.
     renderBrowserOptions();
 
-    // Load sync status.
     const syncStatus = await window.synkromium.getSyncStatus();
     updateSyncStatus(syncStatus.status, syncStatus.message);
     updateLastSync(syncStatus.lastSyncAt);
 
-    // Listen for real-time status updates from the main process.
     window.synkromium.onSyncStatusChanged((status, message) => {
       updateSyncStatus(status, message);
     });
 
   } catch (err) {
-    // If IPC isn't available (testing outside Electron), show defaults.
     console.warn('IPC not available — running in standalone mode.', err);
     updateSyncStatus('idle', 'Ready (standalone mode)');
     renderBrowserOptions();
   }
 }
 
-// Fire it up!
 initialize();

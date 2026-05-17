@@ -1,43 +1,22 @@
 {
   "compilerOptions": {
-    // We're targeting a modern Node.js runtime inside Electron,
-    // so we can use all the latest JavaScript features.
     "target": "ES2022",
     "module": "Node16",
     "lib": ["ES2022"],
     "types": ["node"],
-
-    // Where the compiled JavaScript ends up.
     "outDir": "./dist",
-
-    // Where our source code lives.
     "rootDir": "./src",
-
-    // Strict mode catches bugs before they happen.
-    // Yes, ALL of these. No shortcuts.
     "strict": true,
-
-    // Helps Node.js find our modules correctly.
     "esModuleInterop": true,
     "moduleResolution": "node16",
     "resolveJsonModule": true,
-
-    // Generate .d.ts files so other tools can understand our types.
     "declaration": true,
-
-    // Source maps let us debug the original TypeScript, not the compiled JS.
     "sourceMap": true,
-
-    // Don't compile if there are type errors. We fix them, not ignore them.
     "noEmitOnError": true,
-
-    // Extra safety nets — catch common mistakes.
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-
-    // Skip type-checking node_modules (speeds up compilation a lot).
     "skipLibCheck": true
   },
   "include": ["src/**/*"],
