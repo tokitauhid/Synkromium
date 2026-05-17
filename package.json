@@ -1,0 +1,29 @@
+{
+  "name": "synkromium",
+  "version": "0.1.0",
+  "description": "Keep your Chromium browser settings and extensions in sync across all your devices, privately and automatically.",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "electron dist/main.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "keywords": [
+    "chromium",
+    "sync",
+    "browser",
+    "settings",
+    "extensions",
+    "git"
+  ],
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "electron": "^42.1.0",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0"
+  }
+}
