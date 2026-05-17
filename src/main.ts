@@ -135,7 +135,11 @@ function openSettingsWindow(): void {
 
 // ─── Shutdown ───────────────────────────────────────────────────
 
+let isShuttingDown = false;
 async function shutdown(): Promise<void> {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
   console.log(`[${APP_NAME}] Shutting down...`);
 
   if (trayManager) {

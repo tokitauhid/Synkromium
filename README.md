@@ -14,6 +14,10 @@
   </p>
 </p>
 
+> [!WARNING]
+> **🚧 EARLY BETA RELEASE 🚧**
+> Synkromium is currently in active beta development. While the core features are functional, you may encounter edge cases or bugs. **Please manually back up your browser profile** before using Synkromium on your daily driver.
+
 <br />
 
 <p align="center">
@@ -201,6 +205,7 @@ Synkromium auto-detects which browsers are installed on your system and lets you
 
 ### Installation
 
+**For Local Development & Testing:**
 ```bash
 # 1. Clone the repository
 git clone https://github.com/tokitauhid/Synkromium.git
@@ -212,6 +217,15 @@ npm install
 # 3. Build and run
 npm run dev
 ```
+
+**For Native Linux Installation (Any Distro):**
+If you want to install Synkromium directly into your system so it appears in your application menu like any other app, run:
+```bash
+git clone https://github.com/tokitauhid/Synkromium.git
+cd Synkromium
+bash install.sh
+```
+*(This will package a distro-independent build, place it in `/opt/Synkromium`, and create a desktop shortcut. You will be prompted for your sudo password.)*
 
 ### First Run
 
