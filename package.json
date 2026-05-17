@@ -5,8 +5,11 @@
   "type": "module",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build:main": "tsc",
+    "build:renderer": "tsc -p src/ui/renderer/tsconfig.json",
+    "copy:assets": "mkdir -p dist/ui/renderer && cp src/ui/renderer/index.html dist/ui/renderer/ && cp src/ui/renderer/styles.css dist/ui/renderer/",
+    "build": "npm run build:main && npm run build:renderer && npm run copy:assets",
+    "dev": "npm run build && electron dist/main.js",
     "start": "electron dist/main.js"
   },
   "author": "",

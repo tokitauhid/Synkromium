@@ -3,62 +3,293 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Synkromium Settings</title>
+  <title>Synkromium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+  <!-- Ambient background glow orbs — gives the glassmorphism depth -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
   <div id="app">
-    <!-- Header -->
-    <header class="app-header">
-      <h1>Synkromium</h1>
-      <p class="tagline">Your browser, everywhere.</p>
-    </header>
+    <!-- ═══ Sidebar Navigation ═══ -->
+    <nav class="sidebar">
+      <div class="sidebar-header">
+        <h1 class="logo">Synkromium</h1>
+        <p class="logo-sub">Your browser, everywhere.</p>
+      </div>
 
-    <!-- Status Section -->
-    <section class="status-section">
-      <h2>Sync Status</h2>
-      <div class="status-card">
-        <span id="status-indicator" class="status-dot idle"></span>
-        <span id="status-text">Checking...</span>
-      </div>
-      <p id="last-sync" class="last-sync">Last synced: Never</p>
-    </section>
-
-    <!-- Device Info -->
-    <section class="device-section">
-      <h2>This Device</h2>
-      <div class="info-row">
-        <span class="label">Name:</span>
-        <span id="device-name" class="value">—</span>
-      </div>
-      <div class="info-row">
-        <span class="label">ID:</span>
-        <span id="device-id" class="value">—</span>
-      </div>
-      <div class="info-row">
-        <span class="label">Platform:</span>
-        <span id="device-platform" class="value">—</span>
-      </div>
-    </section>
-
-    <!-- Browser Detection -->
-    <section class="browser-section">
-      <h2>Detected Browsers</h2>
-      <ul id="browser-list" class="browser-list">
-        <li>Scanning...</li>
+      <ul class="nav-list">
+        <li class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">⊞</span>
+          <span class="nav-label">Dashboard</span>
+        </li>
+        <li class="nav-item" data-page="github">
+          <span class="nav-icon">⊙</span>
+          <span class="nav-label">GitHub Setup</span>
+        </li>
+        <li class="nav-item" data-page="sync">
+          <span class="nav-icon">⇄</span>
+          <span class="nav-label">Sync Settings</span>
+        </li>
+        <li class="nav-item" data-page="browser">
+          <span class="nav-icon">◎</span>
+          <span class="nav-label">Browser</span>
+        </li>
+        <li class="nav-item" data-page="about">
+          <span class="nav-icon">ⓘ</span>
+          <span class="nav-label">About</span>
+        </li>
       </ul>
-    </section>
 
-    <!-- Actions -->
-    <section class="actions-section">
-      <button id="btn-sync-now" class="btn btn-primary">Sync Now</button>
-      <button id="btn-view-log" class="btn btn-secondary">View Sync Log</button>
-    </section>
+      <!-- Sync status at the bottom of the sidebar -->
+      <div class="sidebar-footer">
+        <div class="sync-status-mini">
+          <span id="sidebar-status-dot" class="status-dot idle"></span>
+          <span id="sidebar-status-text">Ready</span>
+        </div>
+      </div>
+    </nav>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <p>Synkromium v0.1.0 — Your data stays yours.</p>
-    </footer>
+    <!-- ═══ Main Content Area ═══ -->
+    <main class="content">
+
+      <!-- ─── Dashboard Page ─── -->
+      <section class="page active" id="page-dashboard">
+        <h2 class="page-title">Dashboard</h2>
+
+        <div class="card-grid">
+          <!-- Sync Status Card -->
+          <div class="glass-card status-card">
+            <div class="card-header">
+              <span class="card-icon">◉</span>
+              <h3>Sync Status</h3>
+            </div>
+            <div class="status-display">
+              <span id="status-dot" class="status-dot-lg idle"></span>
+              <div>
+                <p id="status-text" class="status-label">Checking...</p>
+                <p id="last-sync" class="status-sub">Last synced: Never</p>
+              </div>
+            </div>
+            <button id="btn-sync-now" class="btn btn-primary btn-sm">
+              <span class="btn-icon">↻</span> Sync Now
+            </button>
+          </div>
+
+          <!-- Device Info Card -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-icon">⊟</span>
+              <h3>This Device</h3>
+            </div>
+            <div class="info-list">
+              <div class="info-row">
+                <span class="info-label">Name</span>
+                <span id="device-name" class="info-value">—</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">ID</span>
+                <span id="device-id" class="info-value mono">—</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Platform</span>
+                <span id="device-platform" class="info-value">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Browsers Card -->
+          <div class="glass-card">
+            <div class="card-header">
+              <span class="card-icon">◎</span>
+              <h3>Detected Browsers</h3>
+            </div>
+            <ul id="browser-list" class="browser-chips">
+              <li class="chip">Scanning...</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── GitHub Setup Page ─── -->
+      <section class="page" id="page-github">
+        <h2 class="page-title">GitHub Setup</h2>
+        <p class="page-desc">Connect your private GitHub repository to start syncing. Your data never touches third-party servers.</p>
+
+        <div class="glass-card form-card">
+          <div class="form-group">
+            <label for="github-username">GitHub Username</label>
+            <input type="text" id="github-username" placeholder="e.g., tokitauhid" autocomplete="off" spellcheck="false">
+          </div>
+
+          <div class="form-group">
+            <label for="github-token">Personal Access Token</label>
+            <div class="input-with-toggle">
+              <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+              <button id="toggle-token" class="toggle-btn" type="button" title="Show/hide token">👁</button>
+            </div>
+            <p class="field-hint">Generate at GitHub → Settings → Developer Settings → Fine-grained PAT. Needs "Contents: Read & Write" on your repo.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="repo-name">Repository Name</label>
+            <input type="text" id="repo-name" placeholder="synkromium-data" autocomplete="off" spellcheck="false">
+            <p class="field-hint">A private repo will be used (or created) to store your synced settings.</p>
+          </div>
+
+          <div class="form-actions">
+            <button id="btn-test-connection" class="btn btn-outline">
+              <span class="btn-icon">⚡</span> Test Connection
+            </button>
+            <button id="btn-save-github" class="btn btn-primary">
+              <span class="btn-icon">✓</span> Save
+            </button>
+          </div>
+
+          <!-- Connection test result -->
+          <div id="connection-result" class="result-banner hidden"></div>
+        </div>
+      </section>
+
+      <!-- ─── Sync Settings Page ─── -->
+      <section class="page" id="page-sync">
+        <h2 class="page-title">Sync Settings</h2>
+        <p class="page-desc">Choose what gets synced and how often.</p>
+
+        <div class="glass-card form-card">
+          <h3 class="card-section-title">What to Sync</h3>
+
+          <label class="toggle-row">
+            <span class="toggle-label">
+              <strong>Browser Settings</strong>
+              <small>Homepage, search engine, UI preferences</small>
+            </span>
+            <input type="checkbox" id="sync-settings" class="toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span class="toggle-label">
+              <strong>Extensions</strong>
+              <small>List of installed extensions (IDs only, not files)</small>
+            </span>
+            <input type="checkbox" id="sync-extensions" class="toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span class="toggle-label">
+              <strong>Bookmarks</strong>
+              <small>Your saved bookmarks and folders</small>
+            </span>
+            <input type="checkbox" id="sync-bookmarks" class="toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+          <div class="divider"></div>
+
+          <h3 class="card-section-title">Behavior</h3>
+
+          <label class="toggle-row">
+            <span class="toggle-label">
+              <strong>Auto-sync on changes</strong>
+              <small>Automatically push when browser settings change</small>
+            </span>
+            <input type="checkbox" id="auto-sync" class="toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+          <label class="toggle-row">
+            <span class="toggle-label">
+              <strong>Sync on startup</strong>
+              <small>Pull remote changes when the app starts</small>
+            </span>
+            <input type="checkbox" id="sync-on-startup" class="toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+          <div class="form-group">
+            <label for="poll-interval">Poll interval (minutes)</label>
+            <input type="number" id="poll-interval" value="15" min="5" max="120" step="5">
+            <p class="field-hint">How often to check for remote changes. Lower = more frequent but uses more battery.</p>
+          </div>
+
+          <div class="form-actions">
+            <button id="btn-save-sync" class="btn btn-primary">
+              <span class="btn-icon">✓</span> Save Settings
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── Browser Selection Page ─── -->
+      <section class="page" id="page-browser">
+        <h2 class="page-title">Browser</h2>
+        <p class="page-desc">Choose which Chromium browser to sync.</p>
+
+        <div class="glass-card form-card">
+          <div class="browser-options" id="browser-options">
+            <!-- Populated by JavaScript -->
+          </div>
+
+          <div class="form-group">
+            <label for="profile-name">Profile Name</label>
+            <input type="text" id="profile-name" value="Default" autocomplete="off" spellcheck="false">
+            <p class="field-hint">Most people use "Default". Check chrome://version to see your profile name.</p>
+          </div>
+
+          <div class="form-actions">
+            <button id="btn-save-browser" class="btn btn-primary">
+              <span class="btn-icon">✓</span> Save Browser Choice
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── About Page ─── -->
+      <section class="page" id="page-about">
+        <h2 class="page-title">About</h2>
+
+        <div class="glass-card">
+          <div class="about-header">
+            <h3 class="logo" style="font-size: 28px;">Synkromium</h3>
+            <p class="about-version">Version 0.1.0</p>
+          </div>
+          <p class="about-text">
+            Synkromium keeps your Chromium browser settings and extensions
+            in sync across all your devices using a private Git repository.
+          </p>
+          <p class="about-text">
+            Your data stays yours — no third-party servers, no telemetry,
+            no vendor lock-in. Just Git.
+          </p>
+          <div class="divider"></div>
+          <div class="info-list">
+            <div class="info-row">
+              <span class="info-label">License</span>
+              <span class="info-value">MIT</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Runtime</span>
+              <span class="info-value">Electron + TypeScript</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Sync Backend</span>
+              <span class="info-value">Git CLI</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
   <script src="app.js"></script>
