@@ -605,13 +605,10 @@ async function main() {
   }
   console.log("");
   console.log(
-    `  ${colors.yellow("⚠")} The GitHub Actions workflow will build release binaries.`
+    `  ${colors.cyan("›")} The GitHub Actions workflow will build and publish the release`
   );
   console.log(
-    `  ${colors.yellow("⚠")} Once the workflow completes, go to GitHub Releases and`
-  );
-  console.log(
-    `    ${colors.bold("publish the draft release")} so AUR users can download it.`
+    `    with release notes generated from your commit messages.`
   );
   console.log("");
 }
