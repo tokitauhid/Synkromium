@@ -2,7 +2,8 @@
 #
 # Triggered when a version tag is pushed (e.g. v0.1.0).
 # Builds native binaries on Linux, macOS, and Windows runners,
-# then uploads everything to a GitHub Release draft.
+# then uploads everything to a published GitHub Release
+# with release notes generated from commit messages.
 #
 # Usage:
 #   git tag v0.1.0
@@ -110,6 +111,27 @@ jobs:
     needs: [build-linux, build-mac, build-windows]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate release notes from commits
+        id: notes
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Find the previous tag (the one right before the current one)
+          PREV_TAG=$(git tag --sort=-version:refname | grep -A1 "^${TAG}$" | tail -1)
+          if [ "$PREV_TAG" = "$TAG" ] || [ -z "$PREV_TAG" ]; then
+            # No previous tag found — include all commits
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "$TAG")
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)" "${PREV_TAG}..${TAG}")
+          fi
+          # Write to file so multi-line output is preserved
+          echo "$COMMITS" > /tmp/release_notes.md
+          echo "Generated release notes for $PREV_TAG → $TAG"
+
       - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
@@ -121,8 +143,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          draft: true
-          generate_release_notes: true
+          draft: false
+          body_path: /tmp/release_notes.md
           files: |
             artifacts/linux-binaries/*
             artifacts/mac-binaries/*
