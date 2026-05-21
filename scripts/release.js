@@ -141,9 +141,8 @@ function preflight() {
   success("GitHub token found");
 
   // Can we reach GitHub?
-  const pingCheck = runSafe(
-    `git ls-remote --exit-code "https://${token}@github.com/tokitauhid/Synkromium.git" HEAD`
-  );
+  const remoteUrl = `https://${token}@github.com/tokitauhid/Synkromium.git`;
+  const pingCheck = runSafe(`git ls-remote --exit-code "${remoteUrl}" HEAD`);
   if (!pingCheck.ok) {
     fail(
       "Cannot reach GitHub. Check your internet connection and token validity.\n" +
@@ -151,6 +150,23 @@ function preflight() {
     );
   }
   success("GitHub connection verified");
+
+  // Up to date with remote?
+  log("Checking if local branch is up to date...");
+  const fetchCheck = runSafe(`git fetch "${remoteUrl}" main`);
+  if (!fetchCheck.ok) {
+    warn("Failed to fetch from remote to check if branch is up to date.");
+  } else {
+    const behindCount = run("git rev-list --count HEAD..FETCH_HEAD");
+    if (parseInt(behindCount, 10) > 0) {
+      fail(
+        `Your local branch is behind the remote by ${behindCount} commit(s).\n` +
+        `Please run 'git pull --rebase origin main' before releasing to prevent push conflicts.`
+      );
+    }
+    success("Local branch is up to date with remote");
+  }
+
 
   // makepkg available? (needed for AUR, but not fatal if missing)
   const makepkgCheck = runSafe("makepkg --version");
