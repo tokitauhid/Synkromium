@@ -1,5 +1,5 @@
 export const APP_NAME = "Synkromium";
-export const APP_VERSION = "0.1.2";
+export const APP_VERSION = "0.1.3";
 
 export const SYNC_REPO_NAME = "synkromium-data";
 export const SYNC_BRANCH = "main";
