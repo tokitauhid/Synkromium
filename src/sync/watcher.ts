@@ -1,5 +1,6 @@
 import { watch, type FSWatcher } from "chokidar";
 import { DEBOUNCE_DELAY_MS, FILE_STABILITY_THRESHOLD_MS, FILE_POLL_INTERVAL_MS } from "../config/constants.js";
+import { logger } from "../utils/logger.js";
 
 export type OnChangeCallback = (changedPaths: string[]) => void;
 
@@ -40,7 +41,7 @@ export class FileWatcher {
     this.watcher.on("add", (filePath: string) => this.handleFileEvent(filePath));
     this.watcher.on("error", (error: unknown) => {
       const message = error instanceof Error ? error.message : String(error);
-      console.error("[Synkromium] File watcher error:", message);
+      logger.error("File watcher error:", message);
     });
   }
 

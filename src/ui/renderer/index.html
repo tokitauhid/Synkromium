@@ -125,23 +125,58 @@
       <!-- ─── GitHub Setup Page ─── -->
       <section class="page" id="page-github">
         <h2 class="page-title">GitHub Setup</h2>
-        <p class="page-desc">Connect your private GitHub repository to start syncing. Your data never touches third-party servers.</p>
+        <p class="page-desc">Connect your GitHub account to start syncing. Your data never touches third-party servers.</p>
 
-        <div class="glass-card form-card">
-          <div class="form-group">
-            <label for="github-username">GitHub Username</label>
-            <input type="text" id="github-username" placeholder="e.g., tokitauhid" autocomplete="off" spellcheck="false">
+        <!-- OAuth Sign In Card -->
+        <div class="glass-card form-card oauth-card">
+          <div class="card-header">
+            <span class="card-icon">⊙</span>
+            <h3>Sign in with GitHub</h3>
           </div>
 
-          <div class="form-group">
-            <label for="github-token">Personal Access Token</label>
-            <div class="input-with-toggle">
-              <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
-              <button id="toggle-token" class="toggle-btn" type="button" title="Show/hide token">👁</button>
+          <!-- Default state: sign-in button -->
+          <div id="oauth-idle" class="oauth-state">
+            <p class="oauth-desc">Click below to securely connect your GitHub account. A browser window will open for you to authorize Synkromium.</p>
+            <button id="btn-oauth-start" class="btn btn-github">
+              <svg class="github-mark" viewBox="0 0 16 16" width="20" height="20" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              Sign in with GitHub
+            </button>
+          </div>
+
+          <!-- Awaiting user: show device code -->
+          <div id="oauth-awaiting" class="oauth-state hidden">
+            <p class="oauth-desc">Enter this code on GitHub:</p>
+            <div class="oauth-code-display">
+              <span id="oauth-user-code" class="oauth-code">————</span>
+              <button id="btn-copy-code" class="btn btn-outline btn-sm" title="Copy code">📋 Copy</button>
             </div>
-            <p class="field-hint">Generate at GitHub → Settings → Developer Settings → Fine-grained PAT. Needs "Contents: Read & Write" on your repo.</p>
+            <div class="oauth-polling-status">
+              <div class="oauth-spinner"></div>
+              <span>Waiting for authorization…</span>
+            </div>
           </div>
 
+          <!-- Success state: connected -->
+          <div id="oauth-success" class="oauth-state hidden">
+            <div class="oauth-connected">
+              <span class="oauth-check">✓</span>
+              <div>
+                <p class="oauth-connected-label">Connected as</p>
+                <p id="oauth-username" class="oauth-connected-user">—</p>
+              </div>
+            </div>
+            <button id="btn-oauth-disconnect" class="btn btn-outline btn-sm btn-danger-outline">Disconnect</button>
+          </div>
+
+          <!-- Error state -->
+          <div id="oauth-error" class="oauth-state hidden">
+            <div class="result-banner error" id="oauth-error-msg">OAuth failed.</div>
+            <button id="btn-oauth-retry" class="btn btn-outline btn-sm">Try Again</button>
+          </div>
+        </div>
+
+        <!-- Repository Name (always visible) -->
+        <div class="glass-card form-card">
           <div class="form-group">
             <label for="repo-name">Repository Name</label>
             <input type="text" id="repo-name" placeholder="synkromium-data" autocomplete="off" spellcheck="false">
@@ -160,6 +195,35 @@
           <!-- Connection test result -->
           <div id="connection-result" class="result-banner hidden"></div>
         </div>
+
+        <!-- PAT Fallback (collapsible) -->
+        <details class="pat-collapsible">
+          <summary class="pat-summary">
+            <span class="pat-summary-icon">🔑</span>
+            Advanced: Use a Personal Access Token instead
+          </summary>
+          <div class="glass-card form-card pat-card">
+            <div class="form-group">
+              <label for="github-username">GitHub Username</label>
+              <input type="text" id="github-username" placeholder="e.g., tokitauhid" autocomplete="off" spellcheck="false">
+            </div>
+
+            <div class="form-group">
+              <label for="github-token">Personal Access Token</label>
+              <div class="input-with-toggle">
+                <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+                <button id="toggle-token" class="toggle-btn" type="button" title="Show/hide token">👁</button>
+              </div>
+              <p class="field-hint">Generate at GitHub → Settings → Developer Settings → Fine-grained PAT. Needs "Contents: Read & Write" on your repo.</p>
+            </div>
+
+            <div class="form-actions">
+              <button id="btn-save-pat" class="btn btn-primary btn-sm">
+                <span class="btn-icon">✓</span> Save Token
+              </button>
+            </div>
+          </div>
+        </details>
       </section>
 
       <!-- ─── Sync Settings Page ─── -->

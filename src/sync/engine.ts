@@ -8,6 +8,7 @@ import { scanFiles, formatFindings } from "../security/secret-scanner.js";
 import { filterAllowedFiles } from "../security/allowlist.js";
 import { getOrCreateDeviceIdentity } from "../device/identity.js";
 import { COMMIT_PREFIX, POLL_INTERVAL_MS } from "../config/constants.js";
+import { logger } from "../utils/logger.js";
 
 export interface SyncEngineConfig {
   repoPath: string;
@@ -36,7 +37,7 @@ export class SyncEngine {
   }
 
   async start(): Promise<void> {
-    console.log("[Synkromium] Starting sync engine...");
+    logger.info("Starting sync engine...");
 
     const gitAvailable = await git.isGitInstalled();
     if (!gitAvailable) {
@@ -44,12 +45,21 @@ export class SyncEngine {
       return;
     }
 
+    const { existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    
+    if (!existsSync(join(this.config.repoPath, ".git"))) {
+       logger.info("Initializing local git repository...");
+       await git.init(this.config.repoPath);
+       await git.addRemote(this.config.repoPath, this.config.remoteUrl);
+    }
+
     await this.pull();
 
     // Retry any push that failed during a previous offline session
     const state = readSyncState(this.config.repoPath, this.deviceId);
     if (state.pendingPush) {
-      console.log("[Synkromium] Retrying pending push from previous session.");
+      logger.info("Retrying pending push from previous session.");
       await this.push();
     }
 
@@ -57,16 +67,16 @@ export class SyncEngine {
 
     this.pollTimer = setInterval(() => {
       this.pull().catch((err) => {
-        console.error("[Synkromium] Poll pull failed:", err);
+        logger.error("Poll pull failed:", err);
       });
     }, POLL_INTERVAL_MS);
 
     this.setStatus("idle", "Sync engine is running.");
-    console.log("[Synkromium] Sync engine started.");
+    logger.info("Sync engine started.");
   }
 
   async stop(): Promise<void> {
-    console.log("[Synkromium] Stopping sync engine...");
+    logger.info("Stopping sync engine...");
 
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
@@ -99,7 +109,7 @@ export class SyncEngine {
 
       const validation = await this.config.adapter.validate(state);
       if (!validation.valid) {
-        console.error("[Synkromium] Validation failed:", validation.errors);
+        logger.error("Validation failed:", validation.errors);
         this.setStatus("error", `Validation failed: ${validation.errors.join(", ")}`);
         return;
       }
@@ -108,7 +118,7 @@ export class SyncEngine {
       const { allowed, rejected } = filterAllowedFiles(syncPaths, this.config.adapter.getId());
 
       for (const r of rejected) {
-        console.warn(`[Synkromium] Skipped: ${r.file} — ${r.reason}`);
+        logger.warn(`Skipped: ${r.file} — ${r.reason}`);
       }
 
       if (allowed.length === 0) {
@@ -119,7 +129,7 @@ export class SyncEngine {
       const scanResult = scanFiles(allowed);
       if (!scanResult.clean) {
         for (const [filePath, result] of scanResult.results) {
-          if (!result.clean) console.error(formatFindings(filePath, result.findings));
+          if (!result.clean) logger.error(formatFindings(filePath, result.findings));
         }
         this.setStatus("error", "Sync blocked: sensitive data detected. See logs for details.");
         return;
@@ -143,7 +153,7 @@ export class SyncEngine {
 
       const pushResult = await git.push(this.config.repoPath);
       if (!pushResult.success) {
-        console.warn("[Synkromium] Push failed (probably offline). Will retry later.");
+        logger.warn("Push failed (probably offline). Will retry later.");
         markPendingPush(this.config.repoPath, this.deviceId);
         this.setStatus("idle", "Changes saved locally. Will push when online.");
         return;
@@ -151,11 +161,11 @@ export class SyncEngine {
 
       markSyncComplete(this.config.repoPath, this.deviceId, commitResult.hash);
       this.setStatus("idle", "Changes synced successfully.");
-      console.log(`[Synkromium] Pushed commit ${commitResult.hash}`);
+      logger.info(`Pushed commit ${commitResult.hash}`);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown push error";
-      console.error("[Synkromium] Push failed:", message);
+      logger.error("Push failed:", message);
       this.setStatus("error", message);
     } finally {
       releaseLock(this.config.repoPath);
@@ -196,7 +206,7 @@ export class SyncEngine {
 
       const pullResult = await git.pull(this.config.repoPath);
       if (!pullResult.success) {
-        console.error("[Synkromium] Pull failed:", pullResult.message);
+        logger.error("Pull failed:", pullResult.message);
         this.setStatus("error", pullResult.message);
         return;
       }
@@ -211,7 +221,7 @@ export class SyncEngine {
 
         const validation = await this.config.adapter.validate(state);
         if (!validation.valid) {
-          console.warn("[Synkromium] Restore validation had issues:", validation.errors);
+          logger.warn("Restore validation had issues:", validation.errors);
         }
       } finally {
         this.loopGuard.endRestore();
@@ -222,11 +232,11 @@ export class SyncEngine {
       markSyncComplete(this.config.repoPath, this.deviceId, comparison.remoteHead);
 
       this.setStatus("idle", "Remote changes applied successfully.");
-      console.log(`[Synkromium] Applied remote commit ${comparison.remoteHead}`);
+      logger.info(`Applied remote commit ${comparison.remoteHead}`);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown pull error";
-      console.error("[Synkromium] Pull failed:", message);
+      logger.error("Pull failed:", message);
       this.setStatus("error", message);
     } finally {
       releaseLock(this.config.repoPath);
@@ -241,7 +251,7 @@ export class SyncEngine {
   private async handleFileChanges(changedPaths: string[]): Promise<void> {
     if (this.loopGuard.isRestoring()) return;
 
-    console.log(`[Synkromium] Detected changes in ${changedPaths.length} file(s). Syncing...`);
+    logger.info(`Detected changes in ${changedPaths.length} file(s). Syncing...`);
     await this.push();
   }
 

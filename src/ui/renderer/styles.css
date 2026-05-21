@@ -684,3 +684,182 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* --- GitHub OAuth --- */
+
+.oauth-card {
+  max-width: 520px;
+  margin-top: 20px;
+}
+
+.oauth-state.hidden { display: none !important; }
+
+.oauth-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.btn-github {
+  background: #24292f;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 10px;
+  width: 100%;
+  justify-content: center;
+  transition: all var(--transition-smooth);
+}
+
+.btn-github:hover {
+  background: #32383f;
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-github:active { transform: translateY(0); }
+
+.btn-github .github-mark {
+  flex-shrink: 0;
+}
+
+.oauth-code-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.oauth-code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glass-strong);
+  user-select: all;
+}
+
+.oauth-polling-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.oauth-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(124, 92, 255, 0.2);
+  border-top-color: var(--accent-purple);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.oauth-connected {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.oauth-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--accent-green);
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+  animation: checkPop 0.4s var(--transition-spring);
+}
+
+@keyframes checkPop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.oauth-connected-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.oauth-connected-user {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.btn-danger-outline {
+  color: var(--accent-red);
+  border-color: rgba(248, 113, 113, 0.3);
+}
+
+.btn-danger-outline:hover {
+  background: rgba(248, 113, 113, 0.08);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+/* --- PAT Collapsible --- */
+
+.pat-collapsible {
+  max-width: 520px;
+  margin-top: 16px;
+}
+
+.pat-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-smooth);
+  list-style: none;
+}
+
+.pat-summary::-webkit-details-marker { display: none; }
+
+.pat-summary::before {
+  content: '▸';
+  font-size: 12px;
+  transition: transform var(--transition-smooth);
+}
+
+.pat-collapsible[open] .pat-summary::before {
+  transform: rotate(90deg);
+}
+
+.pat-summary:hover {
+  color: var(--text-secondary);
+  background: var(--bg-glass);
+}
+
+.pat-summary-icon {
+  font-size: 14px;
+}
+
+.pat-card {
+  margin-top: 8px;
+  animation: slideIn 0.3s ease;
+}
+

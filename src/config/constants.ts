@@ -26,3 +26,7 @@ export const DEVICE_ID_FILENAME = ".synkromium-device-id";
 
 // Anything bigger than this is definitely not a settings file
 export const MAX_SYNC_FILE_SIZE_BYTES = 1_048_576;
+
+// GitHub OAuth Device Flow
+export const GITHUB_CLIENT_ID = "Ov23liezUm41KqSyBSt2";
+export const GITHUB_OAUTH_SCOPE = "repo";

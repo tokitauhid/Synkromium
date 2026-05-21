@@ -14,6 +14,15 @@ contextBridge.exposeInMainWorld("synkromium", {
   testConnection: () =>
     ipcRenderer.invoke(channels.TEST_CONNECTION),
 
+  startOAuth: () =>
+    ipcRenderer.invoke(channels.GITHUB_OAUTH_START),
+
+  onOAuthStatus: (callback: (payload: Record<string, unknown>) => void) => {
+    ipcRenderer.on(channels.GITHUB_OAUTH_STATUS, (_event, payload) => {
+      callback(payload as Record<string, unknown>);
+    });
+  },
+
   syncNow: () =>
     ipcRenderer.invoke(channels.SYNC_NOW),
 
@@ -35,3 +44,4 @@ contextBridge.exposeInMainWorld("synkromium", {
     });
   },
 });
+

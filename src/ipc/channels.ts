@@ -3,6 +3,8 @@
 export const GET_SETTINGS = "settings:get";
 export const SAVE_SETTINGS = "settings:save";
 export const TEST_CONNECTION = "github:test-connection";
+export const GITHUB_OAUTH_START = "github:oauth-start";
+export const GITHUB_OAUTH_STATUS = "github:oauth-status";
 
 export const SYNC_NOW = "sync:now";
 export const GET_SYNC_STATUS = "sync:get-status";

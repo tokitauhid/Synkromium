@@ -1,15 +1,17 @@
-import { ipcMain } from "electron";
+import { ipcMain, shell, BrowserWindow } from "electron";
 import { loadSettings, saveSettings, getRepoUrl, isConfigured, type UserSettings } from "../config/settings.js";
 import { getOrCreateDeviceIdentity } from "../device/identity.js";
 import { detectInstalledBrowsers, validateCustomBrowserPath } from "../adapters/chromium/paths.js";
+import { startDeviceFlow, pollForToken, fetchGitHubUser } from "../auth/github-oauth.js";
 import * as git from "../git/backend.js";
 import * as channels from "./channels.js";
+import { logger } from "../utils/logger.js";
+
+let oauthAbortController: AbortController | null = null;
 
 export function registerIpcHandlers(): void {
-
   ipcMain.handle(channels.GET_SETTINGS, () => {
     const settings = loadSettings();
-    // Never send the raw token to the renderer
     return {
       ...settings,
       githubTokenMasked: settings.githubToken
@@ -59,13 +61,27 @@ export function registerIpcHandlers(): void {
       const { promisify } = await import("node:util");
       const execFileAsync = promisify(execFile);
 
-      await execFileAsync("git", ["ls-remote", repoUrl], { timeout: 15_000 });
+      try {
+        await execFileAsync("git", ["ls-remote", repoUrl], { timeout: 15_000 });
+      } catch (error: any) {
+        const stderr = error.stderr || error.message || "";
+        if (stderr.includes("not found") || stderr.includes("Repository not found")) {
+           logger.info("Repository not found, attempting to create it...");
+           const { createGitHubRepo } = await import("../auth/github-oauth.js");
+           await createGitHubRepo(settings.githubToken, settings.repoName);
+           // Verify again
+           await execFileAsync("git", ["ls-remote", repoUrl], { timeout: 15_000 });
+        } else {
+           throw error;
+        }
+      }
 
       return {
         success: true,
         message: "Connected successfully! Your credentials are working.",
       };
-    } catch {
+    } catch (error) {
+      logger.error("Connection test failed:", error);
       return {
         success: false,
         message: "Could not connect. Please check your token, username, and repo name.",
@@ -73,13 +89,106 @@ export function registerIpcHandlers(): void {
     }
   });
 
-  ipcMain.handle(channels.GET_SYNC_STATUS, () => {
-    // TODO: Wire up real sync engine status
-    return {
-      status: "idle",
-      message: "Ready to sync.",
-      lastSyncAt: "",
+  ipcMain.handle(channels.GITHUB_OAUTH_START, async (event) => {
+    logger.info("Handling GITHUB_OAUTH_START IPC call...");
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) return;
+
+    const sendStatus = (payload: Record<string, unknown>) => {
+      if (!window.isDestroyed()) {
+        window.webContents.send(channels.GITHUB_OAUTH_STATUS, payload);
+      }
     };
+
+    if (oauthAbortController) {
+      logger.info("Aborting previous OAuth flow.");
+      oauthAbortController.abort();
+    }
+    oauthAbortController = new AbortController();
+
+    try {
+      const deviceResponse = await startDeviceFlow();
+
+      sendStatus({
+        phase: "awaiting_user",
+        userCode: deviceResponse.user_code,
+        verificationUri: deviceResponse.verification_uri,
+      });
+
+      await shell.openExternal(deviceResponse.verification_uri);
+
+      const tokenResult = await pollForToken(
+        deviceResponse.device_code,
+        deviceResponse.interval,
+        deviceResponse.expires_in,
+        oauthAbortController.signal,
+      );
+
+      sendStatus({ phase: "fetching_user" });
+
+      const user = await fetchGitHubUser(tokenResult.access_token);
+
+      const current = loadSettings();
+      const updated = {
+        ...current,
+        githubToken: tokenResult.access_token,
+        githubUsername: user.login,
+        authMethod: "oauth" as const,
+      };
+      saveSettings(updated);
+
+      logger.info(`OAuth flow completed successfully for user ${user.login}`);
+      sendStatus({
+        phase: "success",
+        username: user.login,
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "OAuth flow failed.";
+      logger.error("OAuth flow failed in IPC handler:", error);
+      sendStatus({ phase: "error", message });
+    } finally {
+      oauthAbortController = null;
+    }
+  });
+
+  ipcMain.handle(channels.GET_SYNC_STATUS, async () => {
+    try {
+      const engine = await getSyncEngine();
+      return {
+        status: engine.getStatus(),
+        message: "Engine running.",
+        lastSyncAt: new Date().toISOString(), // We should read this from state, but this is a stub
+      };
+    } catch {
+      return {
+        status: "idle",
+        message: "Ready to sync.",
+        lastSyncAt: "",
+      };
+    }
+  });
+
+  ipcMain.handle(channels.SYNC_NOW, async () => {
+    try {
+      logger.info("Handling SYNC_NOW IPC call...");
+      
+      const settings = loadSettings();
+      if (!isConfigured(settings)) {
+        throw new Error("Synkromium is not configured yet.");
+      }
+      
+      // Auto-create repo if it doesn't exist
+      const { createGitHubRepo } = await import("../auth/github-oauth.js");
+      await createGitHubRepo(settings.githubToken, settings.repoName).catch((e) => {
+        logger.warn("Auto-create repo error (might already exist):", e.message);
+      });
+
+      const engine = await getSyncEngine();
+      await engine.syncNow();
+    } catch (error: any) {
+      logger.error("Sync Now failed:", error);
+      throw error;
+    }
   });
 
   ipcMain.handle(channels.GET_DEVICE_INFO, () => {
@@ -94,3 +203,40 @@ export function registerIpcHandlers(): void {
     return validateCustomBrowserPath(customPath, profileName || "Default");
   });
 }
+
+let syncEngineInstance: any = null;
+
+async function getSyncEngine() {
+  if (syncEngineInstance) return syncEngineInstance;
+
+  const settings = loadSettings();
+  if (!isConfigured(settings)) {
+    throw new Error("Synkromium is not configured yet.");
+  }
+
+  const { SyncEngine } = await import("../sync/engine.js");
+  const { ChromiumAdapter } = await import("../adapters/chromium/adapter.js");
+  const { join } = await import("node:path");
+  const { homedir } = await import("node:os");
+  const { SYNC_REPO_NAME } = await import("../config/constants.js");
+  
+  const REPO_PATH = join(homedir(), SYNC_REPO_NAME);
+  
+  const adapter = new ChromiumAdapter(
+    (settings.browser || "chrome") as any,
+    settings.profileName,
+    settings.customBrowserPath
+  );
+
+  syncEngineInstance = new SyncEngine({
+    repoPath: REPO_PATH,
+    adapter: adapter,
+    remoteUrl: getRepoUrl(settings),
+  });
+
+  // Start the engine
+  await syncEngineInstance.start();
+
+  return syncEngineInstance;
+}
+

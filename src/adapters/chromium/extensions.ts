@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { logger } from "../../utils/logger.js";
 
 export interface ExtensionInfo {
   id: string;
@@ -28,7 +29,7 @@ export function extractExtensions(profilePath: string): ExtensionInfo[] {
   try {
     securePrefs = JSON.parse(readFileSync(securePrefsPath, "utf-8")) as Record<string, unknown>;
   } catch {
-    console.warn("[Synkromium] Could not read Secure Preferences. Skipping extension extraction.");
+    logger.warn("Could not read Secure Preferences. Skipping extension extraction.");
     return [];
   }
 

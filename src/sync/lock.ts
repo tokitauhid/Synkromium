@@ -1,6 +1,7 @@
-import { writeFileSync, unlinkSync, existsSync, statSync } from "node:fs";
+import { writeFileSync, rmSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { LOCK_FILE_NAME, LOCK_TIMEOUT_MS, LOCK_RETRY_INTERVAL_MS } from "../config/constants.js";
+import { logger } from "../utils/logger.js";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,13 +39,13 @@ export async function acquireLock(repoPath: string): Promise<void> {
 
   while (isLocked(repoPath)) {
     if (isLockStale(repoPath)) {
-      console.warn(`[Synkromium] Found stale lock (>${LOCK_TIMEOUT_MS / 1000}s old). Breaking it.`);
+      logger.warn(`[Synkromium] Found stale lock (>${LOCK_TIMEOUT_MS / 1000}s old). Breaking it.`);
       releaseLock(repoPath);
       break;
     }
 
     if (Date.now() - startedWaiting > LOCK_TIMEOUT_MS) {
-      console.warn(`[Synkromium] Lock wait timed out after ${LOCK_TIMEOUT_MS / 1000}s. Forcing through.`);
+      logger.warn(`[Synkromium] Lock wait timed out after ${LOCK_TIMEOUT_MS / 1000}s. Forcing through.`);
       releaseLock(repoPath);
       break;
     }
@@ -63,8 +64,8 @@ export async function acquireLock(repoPath: string): Promise<void> {
 export function releaseLock(repoPath: string): void {
   const lockPath = getLockPath(repoPath);
   try {
-    if (existsSync(lockPath)) unlinkSync(lockPath);
+    if (existsSync(lockPath)) rmSync(lockPath, { force: true });
   } catch {
-    console.warn("[Synkromium] Could not release lock file. It may need manual cleanup.");
+    logger.warn("[Synkromium] Could not release lock file. It may need manual cleanup.");
   }
 }

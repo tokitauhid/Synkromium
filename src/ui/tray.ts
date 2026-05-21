@@ -2,6 +2,7 @@ import { Tray, Menu, nativeImage, app } from "electron";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import type { SyncStatus } from "../sync/engine.js";
+import { logger } from "../utils/logger.js";
 
 export class TrayManager {
   private tray: Tray | null = null;
@@ -35,11 +36,12 @@ export class TrayManager {
       icon = nativeImage.createFromPath(iconPath);
       icon = icon.resize({ width: 16, height: 16 });
     } else {
-      console.warn("[Synkromium] Could not find tray icon, using empty placeholder.");
+      logger.warn("Could not find tray icon, using empty placeholder.");
       icon = nativeImage.createEmpty();
     }
 
     this.tray = new Tray(icon);
+    
     this.tray.setToolTip("Synkromium — Your browser, everywhere.");
     this.rebuildMenu();
   }

@@ -3,6 +3,7 @@ import { join, basename } from "node:path";
 import type { Adapter, NormalizedState, ValidationResult } from "../base.js";
 import { getSettingsFilePaths, getProfilePath, type BrowserName } from "./paths.js";
 import { extractExtensions } from "./extensions.js";
+import { logger } from "../../utils/logger.js";
 
 // Keys that are machine-specific (local paths, GPU info, session state)
 // and should never travel between devices
@@ -43,7 +44,7 @@ export class ChromiumAdapter implements Adapter {
         const parsed = JSON.parse(raw) as Record<string, unknown>;
         settingsData[fileName] = this.stripMachineSpecificKeys(parsed);
       } catch {
-        console.warn(`[Synkromium] Could not read ${fileName}. Skipping.`);
+        logger.warn(`Could not read ${fileName}. Skipping.`);
       }
     }
 
@@ -82,7 +83,7 @@ export class ChromiumAdapter implements Adapter {
         try {
           localSettings = JSON.parse(readFileSync(filePath, "utf-8")) as Record<string, unknown>;
         } catch {
-          console.warn(`[Synkromium] Local ${fileName} was corrupt. Using incoming settings entirely.`);
+          logger.warn(`Local ${fileName} was corrupt. Using incoming settings entirely.`);
         }
       }
 
@@ -151,7 +152,7 @@ export class ChromiumAdapter implements Adapter {
     try {
       copyFileSync(filePath, filePath + ".synkromium-bak");
     } catch {
-      console.warn(`[Synkromium] Could not create backup of ${basename(filePath)}.`);
+      logger.warn(`Could not create backup of ${basename(filePath)}.`);
     }
   }
 }

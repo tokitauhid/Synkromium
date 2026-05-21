@@ -2,11 +2,13 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
 import { APP_NAME } from "./constants.js";
+import { logger } from "../utils/logger.js";
 
 export interface UserSettings {
   githubToken: string;
   githubUsername: string;
   repoName: string;
+  authMethod: "oauth" | "pat";
   browser: "chrome" | "chromium" | "brave" | "edge" | "helium";
   profileName: string;
   syncOptions: {
@@ -27,6 +29,7 @@ function getDefaultSettings(): UserSettings {
     githubToken: "",
     githubUsername: "",
     repoName: "synkromium-data",
+    authMethod: "oauth",
     browser: "chrome",
     profileName: "Default",
     syncOptions: {
@@ -64,7 +67,7 @@ export function loadSettings(): UserSettings {
     // Merge with defaults so new settings added in future versions get their defaults
     return { ...defaults, ...saved };
   } catch {
-    console.warn("[Synkromium] Settings file was corrupted. Using defaults.");
+    logger.warn("Settings file was corrupted. Using defaults.");
     return defaults;
   }
 }

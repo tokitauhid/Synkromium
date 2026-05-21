@@ -11,6 +11,7 @@ import { APP_NAME, SYNC_REPO_NAME } from "./config/constants.js";
 import { getOrCreateDeviceIdentity } from "./device/identity.js";
 import { registerIpcHandlers } from "./ipc/handlers.js";
 import { loadSettings, isConfigured } from "./config/settings.js";
+import { logger } from "./utils/logger.js";
 
 const REPO_PATH = join(homedir(), SYNC_REPO_NAME);
 
@@ -18,17 +19,17 @@ let trayManager: TrayManager | null = null;
 let settingsWindow: BrowserWindow | null = null;
 
 app.whenReady().then(async () => {
-  console.log(`[${APP_NAME}] Starting up...`);
+  logger.info("Starting up...");
 
   const device = getOrCreateDeviceIdentity();
-  console.log(`[${APP_NAME}] Device: ${device.name} (${device.id})`);
+  logger.info(`Device: ${device.name} (${device.id})`);
 
   const browsers = detectInstalledBrowsers();
-  console.log(`[${APP_NAME}] Found browsers: ${browsers.join(", ") || "none"}`);
+  logger.info(`Found browsers: ${browsers.join(", ") || "none"}`);
 
   // Register IPC before creating windows so the renderer can talk to us immediately
   registerIpcHandlers();
-  console.log(`[${APP_NAME}] IPC handlers registered.`);
+  logger.info("IPC handlers registered.");
 
   if (!existsSync(REPO_PATH)) {
     mkdirSync(REPO_PATH, { recursive: true });
@@ -39,7 +40,7 @@ app.whenReady().then(async () => {
 
   trayManager.setCallbacks({
     onSyncNow: () => {
-      console.log(`[${APP_NAME}] Sync triggered from tray.`);
+      logger.info("Sync triggered from tray.");
     },
     onOpenSettings: () => {
       openSettingsWindow();
@@ -51,14 +52,14 @@ app.whenReady().then(async () => {
 
   const settings = loadSettings();
   if (!isConfigured(settings)) {
-    console.log(`[${APP_NAME}] Not configured yet. Opening setup window.`);
+    logger.info("Not configured yet. Opening setup window.");
     openSettingsWindow();
   } else {
-    console.log(`[${APP_NAME}] Already configured. Running in tray.`);
+    logger.info("Already configured. Running in tray.");
     trayManager.updateStatus("idle", "Ready to sync.");
   }
 
-  console.log(`[${APP_NAME}] Running.`);
+  logger.info("Running.");
 });
 
 function openSettingsWindow(): void {
@@ -89,6 +90,12 @@ function openSettingsWindow(): void {
     settingsWindow.webContents.openDevTools({ mode: "detach" });
   }
 
+  settingsWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    const levels = ["DEBUG", "INFO", "WARN", "ERROR"];
+    const levelName = levels[level] || "INFO";
+    logger.info(`[Renderer ${levelName}] ${message} (${sourceId}:${line})`);
+  });
+
   settingsWindow.on("closed", () => {
     settingsWindow = null;
   });
@@ -99,7 +106,7 @@ async function shutdown(): Promise<void> {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.log(`[${APP_NAME}] Shutting down...`);
+  logger.info("Shutting down...");
   if (trayManager) trayManager.destroy();
   app.quit();
 }
@@ -108,5 +115,5 @@ async function shutdown(): Promise<void> {
 app.on("window-all-closed", () => {});
 
 app.on("before-quit", () => {
-  shutdown().catch(console.error);
+  shutdown().catch((e) => logger.error("Error during shutdown:", e));
 });

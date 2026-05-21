@@ -12,8 +12,9 @@
   "scripts": {
     "build:main": "tsc",
     "build:renderer": "tsc -p src/ui/renderer/tsconfig.json",
+    "build:preload": "esbuild src/preload.ts --bundle --platform=node --external:electron --outfile=dist/preload.js",
     "copy:assets": "node scripts/copy-assets.js",
-    "build": "npm run build:main && npm run build:renderer && npm run copy:assets",
+    "build": "npm run build:main && npm run build:renderer && npm run build:preload && npm run copy:assets",
     "dev": "npm run build && electron dist/main.js",
     "start": "electron dist/main.js",
     "dist": "npm run build && electron-builder",
@@ -21,7 +22,8 @@
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:win": "npm run build && electron-builder --win",
     "install:linux": "bash install.sh",
-    "version": "node scripts/update-version.js && git add README.md src/ui/renderer/index.html src/config/constants.ts"
+    "version": "node scripts/update-version.js && git add README.md src/ui/renderer/index.html src/config/constants.ts",
+    "release": "node scripts/release.js"
   },
   "author": "Tokit Auhid <tokitauhidmim12@gmail.com>",
   "license": "MIT",
@@ -94,6 +96,7 @@
     "@types/node": "^25.8.0",
     "electron": "^42.1.0",
     "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {

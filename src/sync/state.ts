@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { logger } from "../utils/logger.js";
 
 export interface SyncState {
   lastAppliedCommit: string;
@@ -30,7 +31,7 @@ export function readSyncState(repoPath: string, deviceId: string): SyncState {
   try {
     return JSON.parse(readFileSync(filePath, "utf-8")) as SyncState;
   } catch {
-    console.warn("[Synkromium] Sync state file was corrupted. Starting fresh.");
+    logger.warn("[Synkromium] Sync state file was corrupted. Starting fresh.");
     return createEmptyState(deviceId);
   }
 }

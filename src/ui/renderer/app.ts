@@ -30,6 +30,20 @@ const syncNowBtn = document.getElementById('btn-sync-now');
 const sidebarStatusDot = document.getElementById('sidebar-status-dot');
 const sidebarStatusText = document.getElementById('sidebar-status-text');
 
+// OAuth DOM references
+const oauthIdleEl = document.getElementById('oauth-idle');
+const oauthAwaitingEl = document.getElementById('oauth-awaiting');
+const oauthSuccessEl = document.getElementById('oauth-success');
+const oauthErrorEl = document.getElementById('oauth-error');
+const oauthUserCodeEl = document.getElementById('oauth-user-code');
+const oauthUsernameEl = document.getElementById('oauth-username');
+const oauthErrorMsgEl = document.getElementById('oauth-error-msg');
+const btnOAuthStart = document.getElementById('btn-oauth-start');
+const btnCopyCode = document.getElementById('btn-copy-code');
+const btnOAuthDisconnect = document.getElementById('btn-oauth-disconnect');
+const btnOAuthRetry = document.getElementById('btn-oauth-retry');
+
+// PAT / repo DOM references
 const githubUsernameInput = document.getElementById('github-username') as HTMLInputElement;
 const githubTokenInput = document.getElementById('github-token') as HTMLInputElement;
 const repoNameInput = document.getElementById('repo-name') as HTMLInputElement;
@@ -37,6 +51,7 @@ const toggleTokenBtn = document.getElementById('toggle-token');
 const testConnectionBtn = document.getElementById('btn-test-connection');
 const saveGithubBtn = document.getElementById('btn-save-github');
 const connectionResult = document.getElementById('connection-result');
+const savePatBtn = document.getElementById('btn-save-pat');
 
 const syncSettingsCheck = document.getElementById('sync-settings') as HTMLInputElement;
 const syncExtensionsCheck = document.getElementById('sync-extensions') as HTMLInputElement;
@@ -78,6 +93,85 @@ function updateLastSync(timestamp: string): void {
     : 'Last synced: Never';
 }
 
+// --- OAuth UI ---
+
+function showOAuthState(state: 'idle' | 'awaiting' | 'success' | 'error'): void {
+  oauthIdleEl?.classList.toggle('hidden', state !== 'idle');
+  oauthAwaitingEl?.classList.toggle('hidden', state !== 'awaiting');
+  oauthSuccessEl?.classList.toggle('hidden', state !== 'success');
+  oauthErrorEl?.classList.toggle('hidden', state !== 'error');
+}
+
+btnOAuthStart?.addEventListener('click', async () => {
+  btnOAuthStart.classList.add('loading');
+  btnOAuthStart.setAttribute('disabled', 'true');
+
+  try {
+    await window.synkromium.startOAuth();
+  } catch (error: unknown) {
+    showOAuthState('error');
+    if (oauthErrorMsgEl) {
+      oauthErrorMsgEl.textContent = `Failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+
+  btnOAuthStart.classList.remove('loading');
+  btnOAuthStart.removeAttribute('disabled');
+});
+
+btnCopyCode?.addEventListener('click', () => {
+  const code = oauthUserCodeEl?.textContent || '';
+  if (code && code !== '————') {
+    navigator.clipboard.writeText(code);
+    btnCopyCode.textContent = '✓ Copied';
+    setTimeout(() => { btnCopyCode.textContent = '📋 Copy'; }, 2000);
+  }
+});
+
+btnOAuthDisconnect?.addEventListener('click', async () => {
+  await window.synkromium.saveSettings({
+    githubToken: '',
+    githubUsername: '',
+    authMethod: 'oauth',
+  });
+  showOAuthState('idle');
+});
+
+btnOAuthRetry?.addEventListener('click', () => {
+  showOAuthState('idle');
+});
+
+// Listen for OAuth status push events from main
+window.synkromium.onOAuthStatus((payload) => {
+  const phase = payload.phase as string;
+
+  switch (phase) {
+    case 'awaiting_user':
+      showOAuthState('awaiting');
+      if (oauthUserCodeEl) oauthUserCodeEl.textContent = (payload.userCode as string) || '————';
+      break;
+
+    case 'fetching_user':
+      // Keep showing awaiting — we're almost done
+      break;
+
+    case 'success': {
+      const username = payload.username as string;
+      if (oauthUsernameEl) oauthUsernameEl.textContent = `@${username}`;
+      showOAuthState('success');
+      if (githubUsernameInput) githubUsernameInput.value = username;
+      break;
+    }
+
+    case 'error':
+      showOAuthState('error');
+      if (oauthErrorMsgEl) oauthErrorMsgEl.textContent = (payload.message as string) || 'OAuth failed.';
+      break;
+  }
+});
+
+// --- PAT section ---
+
 toggleTokenBtn?.addEventListener('click', () => {
   if (githubTokenInput.type === 'password') {
     githubTokenInput.type = 'text';
@@ -88,6 +182,26 @@ toggleTokenBtn?.addEventListener('click', () => {
   }
 });
 
+savePatBtn?.addEventListener('click', async () => {
+  const settings: Record<string, unknown> = {
+    githubUsername: githubUsernameInput?.value || '',
+    authMethod: 'pat',
+  };
+
+  const tokenValue = githubTokenInput?.value || '';
+  if (tokenValue && !tokenValue.startsWith('•')) {
+    settings.githubToken = tokenValue;
+  }
+
+  await window.synkromium.saveSettings(settings);
+  showBanner(connectionResult, 'Token saved!', true);
+
+  if (oauthUsernameEl) oauthUsernameEl.textContent = `@${githubUsernameInput?.value || ''}`;
+  showOAuthState('success');
+});
+
+// --- Repo / Connection ---
+
 testConnectionBtn?.addEventListener('click', async () => {
   if (!connectionResult) return;
 
@@ -95,7 +209,9 @@ testConnectionBtn?.addEventListener('click', async () => {
   testConnectionBtn.setAttribute('disabled', 'true');
   connectionResult.classList.add('hidden');
 
-  await saveGithubSettings();
+  await window.synkromium.saveSettings({
+    repoName: repoNameInput?.value || '',
+  });
 
   try {
     const result = await window.synkromium.testConnection();
@@ -111,24 +227,13 @@ testConnectionBtn?.addEventListener('click', async () => {
 });
 
 saveGithubBtn?.addEventListener('click', async () => {
-  await saveGithubSettings();
+  await window.synkromium.saveSettings({
+    repoName: repoNameInput?.value || '',
+  });
   showBanner(connectionResult, 'Settings saved!', true);
 });
 
-async function saveGithubSettings(): Promise<void> {
-  const settings: Record<string, unknown> = {
-    githubUsername: githubUsernameInput?.value || '',
-    repoName: repoNameInput?.value || '',
-  };
-
-  // Only update token if user typed a new one (not the masked placeholder)
-  const tokenValue = githubTokenInput?.value || '';
-  if (tokenValue && !tokenValue.startsWith('•')) {
-    settings.githubToken = tokenValue;
-  }
-
-  await window.synkromium.saveSettings(settings);
-}
+// --- Sync Settings ---
 
 saveSyncBtn?.addEventListener('click', async () => {
   await window.synkromium.saveSettings({
@@ -144,6 +249,8 @@ saveSyncBtn?.addEventListener('click', async () => {
 
   showBanner(null, 'Sync settings saved!', true);
 });
+
+// --- Browser ---
 
 function renderBrowserOptions(): void {
   if (!browserOptionsEl) return;
@@ -218,6 +325,8 @@ saveBrowserBtn?.addEventListener('click', async () => {
   showBanner(pathValidationResult, 'Browser choice saved!', true);
 });
 
+// --- Dashboard ---
+
 syncNowBtn?.addEventListener('click', async () => {
   syncNowBtn.setAttribute('disabled', 'true');
   syncNowBtn.classList.add('loading');
@@ -235,6 +344,8 @@ syncNowBtn?.addEventListener('click', async () => {
   syncNowBtn.classList.remove('loading');
 });
 
+// --- Utilities ---
+
 function showBanner(bannerEl: HTMLElement | null, message: string, success: boolean): void {
   const target = bannerEl || connectionResult;
   if (!target) return;
@@ -245,14 +356,29 @@ function showBanner(bannerEl: HTMLElement | null, message: string, success: bool
   setTimeout(() => { target.classList.add('hidden'); }, 3000);
 }
 
+// --- Initialize ---
+
 async function initialize(): Promise<void> {
   try {
     const settings = await window.synkromium.getSettings();
     currentSettings = settings;
 
+    // Repo name
+    if (repoNameInput) repoNameInput.value = (settings.repoName as string) || '';
+
+    // PAT section
     if (githubUsernameInput) githubUsernameInput.value = (settings.githubUsername as string) || '';
     if (githubTokenInput) githubTokenInput.value = (settings.githubTokenMasked as string) || '';
-    if (repoNameInput) repoNameInput.value = (settings.repoName as string) || '';
+
+    // OAuth: show connected state if already authed
+    const hasToken = Boolean(settings.githubToken || settings.githubTokenMasked);
+    const username = settings.githubUsername as string;
+    if (hasToken && username) {
+      if (oauthUsernameEl) oauthUsernameEl.textContent = `@${username}`;
+      showOAuthState('success');
+    } else {
+      showOAuthState('idle');
+    }
 
     const syncOptions = settings.syncOptions as { settings: boolean; extensions: boolean; bookmarks: boolean } | undefined;
     if (syncSettingsCheck && syncOptions) syncSettingsCheck.checked = syncOptions.settings;
