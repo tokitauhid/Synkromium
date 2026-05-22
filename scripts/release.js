@@ -8,7 +8,7 @@ import readline from "readline";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..");
-const AUR_DIR = path.join(ROOT, "aur-synkromium-bin");
+const AUR_DIR = path.join(ROOT, "aur-synkromium-git");
 const SETTINGS_PATH = path.join(homedir(), ".synkromium", "settings.json");
 
 const VALID_BUMP_TYPES = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
@@ -461,16 +461,25 @@ function updateAur(newVersion, hasMakepkg) {
     fail("PKGBUILD not found in AUR directory");
   }
 
-  let pkgbuild = fs.readFileSync(pkgbuildPath, "utf8");
-  const oldPkgver = pkgbuild.match(/pkgver=([^\n]+)/)?.[1];
-
-  pkgbuild = pkgbuild.replace(
-    /pkgver=[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?/,
-    `pkgver=${newVersion}`
-  );
-  pkgbuild = pkgbuild.replace(/pkgrel=[0-9]+/, "pkgrel=1");
-  fs.writeFileSync(pkgbuildPath, pkgbuild, "utf8");
-  success(`PKGBUILD updated: pkgver ${oldPkgver} → ${newVersion}`);
+  if (hasMakepkg) {
+    log("Running makepkg to auto-update pkgver from git...");
+    try {
+      run("makepkg --nobuild --nodeps", AUR_DIR);
+      success("PKGBUILD version updated automatically by makepkg");
+    } catch (err) {
+      warn("makepkg --nobuild failed: " + err);
+    }
+  } else {
+    // Manual fallback if makepkg is not available
+    let pkgbuild = fs.readFileSync(pkgbuildPath, "utf8");
+    pkgbuild = pkgbuild.replace(
+      /pkgver=[a-zA-Z0-9.\-]+/,
+      `pkgver=${newVersion}`
+    );
+    pkgbuild = pkgbuild.replace(/pkgrel=[0-9]+/, "pkgrel=1");
+    fs.writeFileSync(pkgbuildPath, pkgbuild, "utf8");
+    success(`PKGBUILD updated manually to ${newVersion}`);
+  }
 
   // Step 3: Regenerate .SRCINFO
   if (hasMakepkg) {
@@ -528,7 +537,7 @@ function updateAur(newVersion, hasMakepkg) {
 
 function generateSrcinfoManually(version) {
   // Fallback: generate .SRCINFO from PKGBUILD values directly
-  const srcinfo = `pkgbase = synkromium-bin
+  const srcinfo = `pkgbase = synkromium-git
 \tpkgdesc = Keep your Chromium browser settings and extensions in sync across all your devices, privately and automatically.
 \tpkgver = ${version}
 \tpkgrel = 1
@@ -540,12 +549,18 @@ function generateSrcinfoManually(version) {
 \tdepends = libsecret
 \tdepends = gtk3
 \tdepends = alsa-lib
+\tmakedepends = git
+\tmakedepends = npm
+\tmakedepends = nodejs
 \tprovides = synkromium
 \tconflicts = synkromium
-\tsource = synkromium-bin-${version}.deb::https://github.com/tokitauhid/Synkromium/releases/download/v${version}/synkromium_${version}_amd64.deb
+\tconflicts = synkromium-bin
+\tsource = git+https://github.com/tokitauhid/Synkromium.git
+\tsource = synkromium.desktop
+\tsha256sums = SKIP
 \tsha256sums = SKIP
 
-pkgname = synkromium-bin
+pkgname = synkromium-git
 `;
   fs.writeFileSync(path.join(AUR_DIR, ".SRCINFO"), srcinfo, "utf8");
   success(".SRCINFO generated manually");
@@ -617,7 +632,7 @@ async function main() {
   console.log(`  Version:  ${colors.bold(colors.green(`v${newVersion}`))}`);
   console.log(`  GitHub:   ${colors.dim("https://github.com/tokitauhid/Synkromium")}`);
   if (hasAurDir) {
-    console.log(`  AUR:      ${colors.dim("https://aur.archlinux.org/packages/synkromium-bin")}`);
+    console.log(`  AUR:      ${colors.dim("https://aur.archlinux.org/packages/synkromium-git")}`);
   }
   console.log("");
   console.log(
