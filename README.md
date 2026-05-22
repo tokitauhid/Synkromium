@@ -19,7 +19,7 @@
 > **🚧 EARLY BETA** — Core features work, but expect rough edges. **Back up your browser profile** before using Synkromium on your daily driver.
 
 <p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/version-0.1.4-blue?style=flat-square" alt="Version" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.1.5-blue?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License" /></a>
   <a href="#"><img src="https://img.shields.io/badge/electron-42-blueviolet?style=flat-square" alt="Electron" /></a>
   <a href="#"><img src="https://img.shields.io/badge/typescript-6.0-blue?style=flat-square" alt="TypeScript" /></a>
