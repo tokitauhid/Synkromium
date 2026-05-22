@@ -82,9 +82,17 @@
                 <p id="last-sync" class="status-sub">Last synced: Never</p>
               </div>
             </div>
-            <button id="btn-sync-now" class="btn btn-primary btn-sm">
-              <span class="btn-icon">↻</span> Sync Now
-            </button>
+            <div class="action-buttons" style="display: flex; gap: 8px; margin-top: 15px;">
+              <button id="btn-pull-now" class="btn btn-outline btn-sm" title="Manual Pull">
+                <span class="btn-icon">↓</span> Pull
+              </button>
+              <button id="btn-push-now" class="btn btn-outline btn-sm" title="Manual Push">
+                <span class="btn-icon">↑</span> Push
+              </button>
+              <button id="btn-sync-now" class="btn btn-primary btn-sm" style="flex: 1;">
+                <span class="btn-icon">↻</span> Sync Now
+              </button>
+            </div>
           </div>
 
           <!-- Device Info Card -->

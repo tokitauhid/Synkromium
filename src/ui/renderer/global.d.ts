@@ -5,6 +5,8 @@ interface SynkromiumBridge {
   startOAuth(): Promise<void>;
   onOAuthStatus(callback: (payload: Record<string, unknown>) => void): void;
   syncNow(): Promise<void>;
+  syncPush(): Promise<void>;
+  syncPull(): Promise<void>;
   getSyncStatus(): Promise<{ status: string; message: string; lastSyncAt: string }>;
   getDeviceInfo(): Promise<{ id: string; name: string; platform: string }>;
   getInstalledBrowsers(): Promise<string[]>;

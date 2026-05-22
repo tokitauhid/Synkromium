@@ -7,6 +7,8 @@ export const GITHUB_OAUTH_START = "github:oauth-start";
 export const GITHUB_OAUTH_STATUS = "github:oauth-status";
 
 export const SYNC_NOW = "sync:now";
+export const SYNC_PUSH = "sync:push";
+export const SYNC_PULL = "sync:pull";
 export const GET_SYNC_STATUS = "sync:get-status";
 export const SYNC_STATUS_CHANGED = "sync:status-changed";
 

@@ -27,6 +27,8 @@ const deviceIdEl = document.getElementById('device-id');
 const devicePlatformEl = document.getElementById('device-platform');
 const browserListEl = document.getElementById('browser-list');
 const syncNowBtn = document.getElementById('btn-sync-now');
+const pushNowBtn = document.getElementById('btn-push-now');
+const pullNowBtn = document.getElementById('btn-pull-now');
 const sidebarStatusDot = document.getElementById('sidebar-status-dot');
 const sidebarStatusText = document.getElementById('sidebar-status-text');
 
@@ -342,6 +344,48 @@ syncNowBtn?.addEventListener('click', async () => {
 
   syncNowBtn.removeAttribute('disabled');
   syncNowBtn.classList.remove('loading');
+});
+
+pushNowBtn?.addEventListener('click', async () => {
+  if (!window.confirm("Warning: Pushing will overwrite the remote sync data with your current local browser settings. This cannot be undone. Are you sure you want to push?")) {
+    return;
+  }
+
+  pushNowBtn.setAttribute('disabled', 'true');
+  pushNowBtn.classList.add('loading');
+  updateSyncStatus('pushing', 'Pushing local settings...');
+
+  try {
+    await window.synkromium.syncPush();
+    updateSyncStatus('idle', 'Push complete!');
+    updateLastSync(new Date().toISOString());
+  } catch {
+    updateSyncStatus('error', 'Push failed.');
+  }
+
+  pushNowBtn.removeAttribute('disabled');
+  pushNowBtn.classList.remove('loading');
+});
+
+pullNowBtn?.addEventListener('click', async () => {
+  if (!window.confirm("Warning: Pulling will overwrite your local browser settings with the remote ones. This cannot be undone. Are you sure you want to pull?")) {
+    return;
+  }
+
+  pullNowBtn.setAttribute('disabled', 'true');
+  pullNowBtn.classList.add('loading');
+  updateSyncStatus('pulling', 'Pulling remote settings...');
+
+  try {
+    await window.synkromium.syncPull();
+    updateSyncStatus('idle', 'Pull complete!');
+    updateLastSync(new Date().toISOString());
+  } catch {
+    updateSyncStatus('error', 'Pull failed.');
+  }
+
+  pullNowBtn.removeAttribute('disabled');
+  pullNowBtn.classList.remove('loading');
 });
 
 // --- Utilities ---

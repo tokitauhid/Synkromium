@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld("synkromium", {
   syncNow: () =>
     ipcRenderer.invoke(channels.SYNC_NOW),
 
+  syncPush: () =>
+    ipcRenderer.invoke(channels.SYNC_PUSH),
+
+  syncPull: () =>
+    ipcRenderer.invoke(channels.SYNC_PULL),
+
   getSyncStatus: () =>
     ipcRenderer.invoke(channels.GET_SYNC_STATUS),
 

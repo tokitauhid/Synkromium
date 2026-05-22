@@ -191,6 +191,45 @@ export function registerIpcHandlers(): void {
     }
   });
 
+  ipcMain.handle(channels.SYNC_PUSH, async () => {
+    try {
+      logger.info("Handling SYNC_PUSH IPC call...");
+      
+      const settings = loadSettings();
+      if (!isConfigured(settings)) {
+        throw new Error("Synkromium is not configured yet.");
+      }
+      
+      const { createGitHubRepo } = await import("../auth/github-oauth.js");
+      await createGitHubRepo(settings.githubToken, settings.repoName).catch((e) => {
+        logger.warn("Auto-create repo error (might already exist):", e.message);
+      });
+
+      const engine = await getSyncEngine();
+      await engine.push();
+    } catch (error: any) {
+      logger.error("Sync Push failed:", error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle(channels.SYNC_PULL, async () => {
+    try {
+      logger.info("Handling SYNC_PULL IPC call...");
+      
+      const settings = loadSettings();
+      if (!isConfigured(settings)) {
+        throw new Error("Synkromium is not configured yet.");
+      }
+      
+      const engine = await getSyncEngine();
+      await engine.pull();
+    } catch (error: any) {
+      logger.error("Sync Pull failed:", error);
+      throw error;
+    }
+  });
+
   ipcMain.handle(channels.GET_DEVICE_INFO, () => {
     return getOrCreateDeviceIdentity();
   });

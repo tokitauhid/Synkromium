@@ -1,4 +1,6 @@
-import type { Adapter } from "../adapters/base.js";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import type { Adapter, NormalizedState } from "../adapters/base.js";
 import * as git from "../git/backend.js";
 import { acquireLock, releaseLock } from "./lock.js";
 import { readSyncState, markSyncComplete, markPendingPush } from "./state.js";
@@ -45,9 +47,6 @@ export class SyncEngine {
       return;
     }
 
-    const { existsSync } = await import("node:fs");
-    const { join } = await import("node:path");
-    
     if (!existsSync(join(this.config.repoPath, ".git"))) {
        logger.info("Initializing local git repository...");
        await git.init(this.config.repoPath);
@@ -135,6 +134,10 @@ export class SyncEngine {
         return;
       }
 
+      // Write the extracted state to the repository
+      const stateFile = join(this.config.repoPath, `${this.config.adapter.getId()}.json`);
+      writeFileSync(stateFile, JSON.stringify(state, null, 2), "utf-8");
+
       const addResult = await git.add(this.config.repoPath, ["."]);
       if (!addResult.success) {
         this.setStatus("error", addResult.message);
@@ -216,7 +219,15 @@ export class SyncEngine {
       this.watcher.pause();
 
       try {
-        const state = await this.config.adapter.extract();
+        const stateFile = join(this.config.repoPath, `${this.config.adapter.getId()}.json`);
+        if (!existsSync(stateFile)) {
+          logger.warn(`Remote state file ${stateFile} missing.`);
+          return;
+        }
+
+        const rawState = readFileSync(stateFile, "utf-8");
+        const state = JSON.parse(rawState) as NormalizedState;
+
         await this.config.adapter.restore(state);
 
         const validation = await this.config.adapter.validate(state);
