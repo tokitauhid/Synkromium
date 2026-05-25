@@ -183,7 +183,7 @@ src/
 - [x] Secure IPC bridge
 
 ### Next
-- [ ] GitHub OAuth (replace manual PAT)
+- [x] GitHub OAuth (replace manual PAT)
 - [ ] OS keychain for token storage
 - [ ] Conflict resolution UI
 - [ ] Extension auto-install suggestions

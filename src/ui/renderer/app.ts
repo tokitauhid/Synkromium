@@ -45,15 +45,10 @@ const btnCopyCode = document.getElementById('btn-copy-code');
 const btnOAuthDisconnect = document.getElementById('btn-oauth-disconnect');
 const btnOAuthRetry = document.getElementById('btn-oauth-retry');
 
-// PAT / repo DOM references
-const githubUsernameInput = document.getElementById('github-username') as HTMLInputElement;
-const githubTokenInput = document.getElementById('github-token') as HTMLInputElement;
 const repoNameInput = document.getElementById('repo-name') as HTMLInputElement;
-const toggleTokenBtn = document.getElementById('toggle-token');
 const testConnectionBtn = document.getElementById('btn-test-connection');
 const saveGithubBtn = document.getElementById('btn-save-github');
 const connectionResult = document.getElementById('connection-result');
-const savePatBtn = document.getElementById('btn-save-pat');
 
 const syncSettingsCheck = document.getElementById('sync-settings') as HTMLInputElement;
 const syncExtensionsCheck = document.getElementById('sync-extensions') as HTMLInputElement;
@@ -134,7 +129,6 @@ btnOAuthDisconnect?.addEventListener('click', async () => {
   await window.synkromium.saveSettings({
     githubToken: '',
     githubUsername: '',
-    authMethod: 'oauth',
   });
   showOAuthState('idle');
 });
@@ -161,7 +155,6 @@ window.synkromium.onOAuthStatus((payload) => {
       const username = payload.username as string;
       if (oauthUsernameEl) oauthUsernameEl.textContent = `@${username}`;
       showOAuthState('success');
-      if (githubUsernameInput) githubUsernameInput.value = username;
       break;
     }
 
@@ -172,35 +165,6 @@ window.synkromium.onOAuthStatus((payload) => {
   }
 });
 
-// --- PAT section ---
-
-toggleTokenBtn?.addEventListener('click', () => {
-  if (githubTokenInput.type === 'password') {
-    githubTokenInput.type = 'text';
-    toggleTokenBtn.textContent = '🙈';
-  } else {
-    githubTokenInput.type = 'password';
-    toggleTokenBtn.textContent = '👁';
-  }
-});
-
-savePatBtn?.addEventListener('click', async () => {
-  const settings: Record<string, unknown> = {
-    githubUsername: githubUsernameInput?.value || '',
-    authMethod: 'pat',
-  };
-
-  const tokenValue = githubTokenInput?.value || '';
-  if (tokenValue && !tokenValue.startsWith('•')) {
-    settings.githubToken = tokenValue;
-  }
-
-  await window.synkromium.saveSettings(settings);
-  showBanner(connectionResult, 'Token saved!', true);
-
-  if (oauthUsernameEl) oauthUsernameEl.textContent = `@${githubUsernameInput?.value || ''}`;
-  showOAuthState('success');
-});
 
 // --- Repo / Connection ---
 
@@ -410,9 +374,7 @@ async function initialize(): Promise<void> {
     // Repo name
     if (repoNameInput) repoNameInput.value = (settings.repoName as string) || '';
 
-    // PAT section
-    if (githubUsernameInput) githubUsernameInput.value = (settings.githubUsername as string) || '';
-    if (githubTokenInput) githubTokenInput.value = (settings.githubTokenMasked as string) || '';
+
 
     // OAuth: show connected state if already authed
     const hasToken = Boolean(settings.githubToken || settings.githubTokenMasked);

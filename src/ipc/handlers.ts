@@ -133,7 +133,6 @@ export function registerIpcHandlers(): void {
         ...current,
         githubToken: tokenResult.access_token,
         githubUsername: user.login,
-        authMethod: "oauth" as const,
       };
       saveSettings(updated);
 
