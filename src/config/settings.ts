@@ -1,7 +1,6 @@
+import { app } from "electron";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
-import { APP_NAME } from "./constants.js";
 import { logger } from "../utils/logger.js";
 
 export interface UserSettings {
@@ -46,7 +45,7 @@ function getDefaultSettings(): UserSettings {
 }
 
 function getConfigDir(): string {
-  return join(homedir(), `.${APP_NAME.toLowerCase()}`);
+  return app.getPath("userData");
 }
 
 function getSettingsPath(): string {

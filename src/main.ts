@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 import { existsSync, mkdirSync } from "node:fs";
-import { homedir } from "node:os";
 import { TrayManager } from "./ui/tray.js";
 import { detectInstalledBrowsers } from "./adapters/chromium/paths.js";
 import { APP_NAME, SYNC_REPO_NAME } from "./config/constants.js";
@@ -13,7 +12,7 @@ import { registerIpcHandlers } from "./ipc/handlers.js";
 import { loadSettings, isConfigured } from "./config/settings.js";
 import { logger } from "./utils/logger.js";
 
-const REPO_PATH = join(homedir(), SYNC_REPO_NAME);
+const REPO_PATH = join(app.getPath("userData"), SYNC_REPO_NAME);
 
 let trayManager: TrayManager | null = null;
 let settingsWindow: BrowserWindow | null = null;

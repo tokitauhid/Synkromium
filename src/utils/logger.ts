@@ -1,6 +1,6 @@
+import { app } from "electron";
 import { appendFileSync, existsSync, mkdirSync, statSync, renameSync } from "node:fs";
 import { join } from "node:path";
-import { homedir } from "node:os";
 import { APP_NAME } from "../config/constants.js";
 
 type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
@@ -11,7 +11,7 @@ class Logger {
   private logFilePath: string;
 
   constructor() {
-    const configDir = join(homedir(), `.${APP_NAME.toLowerCase()}`);
+    const configDir = app.getPath("userData");
     if (!existsSync(configDir)) {
       mkdirSync(configDir, { recursive: true });
     }

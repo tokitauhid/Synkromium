@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { hostname, platform, userInfo } from "node:os";
+import { app } from "electron";
+import { hostname, platform } from "node:os";
 import { join } from "node:path";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { DEVICE_ID_FILENAME } from "../config/constants.js";
@@ -12,7 +13,7 @@ export interface DeviceIdentity {
 }
 
 function getIdentityFilePath(): string {
-  return join(userInfo().homedir, DEVICE_ID_FILENAME);
+  return join(app.getPath("userData"), DEVICE_ID_FILENAME);
 }
 
 function createNewIdentity(): DeviceIdentity {

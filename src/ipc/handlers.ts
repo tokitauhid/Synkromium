@@ -256,10 +256,10 @@ async function getSyncEngine() {
   const { SyncEngine } = await import("../sync/engine.js");
   const { ChromiumAdapter } = await import("../adapters/chromium/adapter.js");
   const { join } = await import("node:path");
-  const { homedir } = await import("node:os");
+  const { app } = await import("electron");
   const { SYNC_REPO_NAME } = await import("../config/constants.js");
   
-  const REPO_PATH = join(homedir(), SYNC_REPO_NAME);
+  const REPO_PATH = join(app.getPath("userData"), SYNC_REPO_NAME);
   
   const adapter = new ChromiumAdapter(
     (settings.browser || "chrome") as any,
