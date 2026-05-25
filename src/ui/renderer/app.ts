@@ -1,6 +1,40 @@
 // Renderer-side logic for the Synkromium settings window.
 // Communicates with main process only through window.synkromium (see preload.ts).
 
+// --- Accent color (persisted per-device via localStorage) ---
+
+function applyAccentHue(hue: string): void {
+  document.documentElement.style.setProperty('--accent-hue', hue);
+}
+
+function initAccentColor(): void {
+  const saved = localStorage.getItem('synkromium-accent-hue');
+  if (saved) applyAccentHue(saved);
+
+  const presets = document.querySelectorAll<HTMLInputElement>('#accent-presets input[name="accent"]');
+  presets.forEach(radio => {
+    // Restore selected state from saved preference
+    if (saved && radio.value === saved) {
+      radio.checked = true;
+      (radio.closest('.accent-preset') as HTMLElement)?.classList.add('active');
+      // Remove active from siblings
+      presets.forEach(other => {
+        if (other !== radio) (other.closest('.accent-preset') as HTMLElement)?.classList.remove('active');
+      });
+    }
+
+    radio.addEventListener('change', () => {
+      applyAccentHue(radio.value);
+      localStorage.setItem('synkromium-accent-hue', radio.value);
+      presets.forEach(other => {
+        (other.closest('.accent-preset') as HTMLElement)?.classList.toggle('active', other === radio);
+      });
+    });
+  });
+}
+
+initAccentColor();
+
 const navItems = document.querySelectorAll<HTMLElement>('.nav-item');
 const pages = document.querySelectorAll<HTMLElement>('.page');
 

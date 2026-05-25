@@ -1,7 +1,9 @@
-import { app } from "electron";
+import { app, safeStorage } from "electron";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { logger } from "../utils/logger.js";
+
+const ENCRYPTION_PREFIX = "enc:";
 
 export interface UserSettings {
   githubToken: string;
@@ -50,6 +52,41 @@ function getSettingsPath(): string {
   return join(getConfigDir(), "settings.json");
 }
 
+function canUseSafeStorage(): boolean {
+  try {
+    return safeStorage.isEncryptionAvailable();
+  } catch {
+    return false;
+  }
+}
+
+function encryptToken(plaintext: string): string {
+  if (!plaintext || !canUseSafeStorage()) return plaintext;
+  try {
+    const encrypted = safeStorage.encryptString(plaintext);
+    return ENCRYPTION_PREFIX + encrypted.toString("base64");
+  } catch (err) {
+    logger.warn("Failed to encrypt token, storing as plaintext:", err);
+    return plaintext;
+  }
+}
+
+function decryptToken(stored: string): string {
+  if (!stored || !stored.startsWith(ENCRYPTION_PREFIX)) return stored;
+  if (!canUseSafeStorage()) {
+    logger.warn("Token is encrypted but safeStorage is unavailable. Returning empty.");
+    return "";
+  }
+  try {
+    const base64 = stored.slice(ENCRYPTION_PREFIX.length);
+    const buffer = Buffer.from(base64, "base64");
+    return safeStorage.decryptString(buffer);
+  } catch (err) {
+    logger.warn("Failed to decrypt token:", err);
+    return "";
+  }
+}
+
 export function loadSettings(): UserSettings {
   const filePath = getSettingsPath();
   const defaults = getDefaultSettings();
@@ -62,7 +99,20 @@ export function loadSettings(): UserSettings {
     const raw = readFileSync(filePath, "utf-8");
     const saved = JSON.parse(raw) as Partial<UserSettings>;
     // Merge with defaults so new settings added in future versions get their defaults
-    return { ...defaults, ...saved };
+    const merged = { ...defaults, ...saved };
+
+    // Decrypt token if encrypted
+    if (merged.githubToken && merged.githubToken.startsWith(ENCRYPTION_PREFIX)) {
+      merged.githubToken = decryptToken(merged.githubToken);
+    } else if (merged.githubToken && canUseSafeStorage()) {
+      // Migration: plaintext token found → encrypt and save back
+      logger.info("Migrating plaintext token to OS keychain.");
+      const encrypted = encryptToken(merged.githubToken);
+      const onDisk = { ...defaults, ...saved, githubToken: encrypted };
+      writeFileSync(filePath, JSON.stringify(onDisk, null, 2), "utf-8");
+    }
+
+    return merged;
   } catch {
     logger.warn("Settings file was corrupted. Using defaults.");
     return defaults;
@@ -77,7 +127,13 @@ export function saveSettings(settings: UserSettings): void {
     mkdirSync(configDir, { recursive: true });
   }
 
-  writeFileSync(filePath, JSON.stringify(settings, null, 2), "utf-8");
+  // Encrypt token before writing to disk
+  const toWrite = { ...settings };
+  if (toWrite.githubToken && !toWrite.githubToken.startsWith(ENCRYPTION_PREFIX)) {
+    toWrite.githubToken = encryptToken(toWrite.githubToken);
+  }
+
+  writeFileSync(filePath, JSON.stringify(toWrite, null, 2), "utf-8");
 }
 
 export function updateSettings(partial: Partial<UserSettings>): UserSettings {

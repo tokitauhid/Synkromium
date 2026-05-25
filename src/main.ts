@@ -73,9 +73,9 @@ function openSettingsWindow(): void {
     minWidth: 700,
     minHeight: 500,
     title: `${APP_NAME}`,
-    backgroundColor: "#0a0a1a",
-    titleBarStyle: "hiddenInset",
-    frame: process.platform === "darwin",
+    backgroundColor: "#141414",
+    titleBarStyle: "hidden",
+    frame: false,
     webPreferences: {
       preload: join(__dirname, "preload.js"),
       nodeIntegration: false,

@@ -4,19 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Synkromium</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- Ambient background glow orbs — gives the glassmorphism depth -->
-  <div class="bg-orbs">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
 
   <div id="app">
     <!-- ═══ Sidebar Navigation ═══ -->
@@ -350,6 +342,26 @@
               <span class="info-label">Sync Backend</span>
               <span class="info-value">Git CLI</span>
             </div>
+          </div>
+        </div>
+
+        <!-- Theme & Appearance -->
+        <div class="glass-card accent-section">
+          <h3 class="card-section-title">Theme &amp; Appearance</h3>
+          <p class="about-text">Choose an accent color for the interface.</p>
+          <div class="accent-presets" id="accent-presets">
+            <label class="accent-preset active" style="background: hsl(262, 65%, 60%);" title="Violet">
+              <input type="radio" name="accent" value="262" checked>
+            </label>
+            <label class="accent-preset" style="background: hsl(220, 80%, 58%);" title="Electric Blue">
+              <input type="radio" name="accent" value="220">
+            </label>
+            <label class="accent-preset" style="background: hsl(152, 60%, 48%);" title="Emerald Green">
+              <input type="radio" name="accent" value="152">
+            </label>
+            <label class="accent-preset" style="background: hsl(25, 90%, 55%);" title="Warm Orange">
+              <input type="radio" name="accent" value="25">
+            </label>
           </div>
         </div>
       </section>
